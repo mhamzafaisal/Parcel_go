@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "725349945042",
+    "project_id": "parcel-go-37333",
+    "storage_bucket": "parcel-go-37333.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:725349945042:android:796a3e2308929c671f270b",
+        "android_client_info": {
+          "package_name": "com.hamza.parcelgo.parcel_go"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5Qj3J1GZw52Ubzg4oDNG51Ltvk9wnUVo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

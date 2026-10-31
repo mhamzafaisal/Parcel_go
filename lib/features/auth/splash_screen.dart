@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/theme.dart';
 import '../../data/services/onboarding_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,7 +22,12 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 2));
     final seen = await OnboardingStorage.isSeen();
     if (!mounted) return;
-    context.go(seen ? '/home' : '/onboarding');
+    final loggedIn = FirebaseAuth.instance.currentUser != null;
+    if (!seen) {
+      context.go('/onboarding');
+    } else {
+      context.go(loggedIn ? '/home' : '/login');
+    }
   }
 
   @override

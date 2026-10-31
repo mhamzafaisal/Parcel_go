@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/widgets/main_shell.dart';
+import '../features/auth/login_screen.dart';
 import '../features/auth/onboarding_screen.dart';
+import '../features/auth/otp_screen.dart';
 import '../features/auth/splash_screen.dart';
 import '../features/customer/history/history_screen.dart';
 import '../features/customer/home/home_screen.dart';
@@ -18,6 +20,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/otp',
+        builder: (context, state) =>
+            OtpScreen(args: state.extra as OtpArgs),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

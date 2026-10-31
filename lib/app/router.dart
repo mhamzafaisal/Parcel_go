@@ -8,6 +8,8 @@ import '../features/auth/splash_screen.dart';
 import '../features/customer/history/history_screen.dart';
 import '../features/customer/home/home_screen.dart';
 import '../features/profile/profile_screen.dart';
+import '../features/auth/role_select_screen.dart';
+import '../features/rider/home/rider_home_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -29,6 +31,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/otp',
         builder: (context, state) =>
             OtpScreen(args: state.extra as OtpArgs),
+      ),
+      GoRoute(
+        path: '/role-select',
+        builder: (context, state) => const RoleSelectScreen(),
+      ),
+      GoRoute(
+        path: '/rider-home',
+        builder: (context, state) => const RiderHomeScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme.dart';
 import '../../data/services/onboarding_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../data/repositories/user_repository.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,15 +19,26 @@ class _SplashScreenState extends State<SplashScreen> {
     _start();
   }
 
-  Future<void> _start() async {
+    Future<void> _start() async {
     await Future.delayed(const Duration(seconds: 2));
     final seen = await OnboardingStorage.isSeen();
     if (!mounted) return;
-    final loggedIn = FirebaseAuth.instance.currentUser != null;
     if (!seen) {
       context.go('/onboarding');
-    } else {
-      context.go(loggedIn ? '/home' : '/login');
+      return;
+    }
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      context.go('/login');
+      return;
+    }
+    try {
+      final profile = await UserRepository().getUser(user.uid);
+      if (!mounted) return;
+      context.go(UserRepository.homeRouteFor(profile));
+    } catch (_) {
+      if (!mounted) return;
+      context.go('/login');
     }
   }
 

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/repositories/user_repository.dart';
 
 class OtpArgs {
   final String phone;
@@ -53,7 +54,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _verify() async {
+    Future<void> _verify() async {
     final code = _codeController.text.trim();
     if (code.length != 6) {
       _snack('Enter the 6-digit code');
@@ -61,9 +62,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     }
     setState(() => _loading = true);
     try {
-      await ref.read(authServiceProvider).verifyOtp(_confirmation, code);
+      final cred =
+          await ref.read(authServiceProvider).verifyOtp(_confirmation, code);
+      final profile =
+          await ref.read(userRepositoryProvider).getUser(cred.user!.uid);
       if (!mounted) return;
-      context.go('/home');
+      context.go(UserRepository.homeRouteFor(profile));
     } catch (e) {
       if (!mounted) return;
       _snack(AuthService.friendlyError(e));

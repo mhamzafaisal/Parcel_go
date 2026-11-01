@@ -27,5 +27,16 @@ service cloud.firestore {
 
       allow delete: if false;
     }
+    match /shipments/{shipmentId} {
+      allow read: if signedIn()
+        && resource.data.customerId == request.auth.uid;
+
+      // Abhi sirf testing ke liye. Task 16 mein proper rules aayenge.
+      allow create: if signedIn()
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.status == 'created';
+
+      allow update, delete: if false;
+    }
   }
 }

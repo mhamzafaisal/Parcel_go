@@ -14,6 +14,7 @@ import '../features/customer/history/history_screen.dart';
 import '../features/customer/home/home_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/rider/home/rider_home_screen.dart';
+import '../features/customer/create_shipment/current_location_screen.dart';
 
 /// Login ya profile badalte hi router ko dobara check karwata hai
 class _RouterRefresh extends ChangeNotifier {
@@ -107,6 +108,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/rider-home',
         builder: (context, state) => const RiderHomeScreen(),
+      ),
+      GoRoute(
+        path: '/map-test',
+        builder: (context, state) => const CurrentLocationScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

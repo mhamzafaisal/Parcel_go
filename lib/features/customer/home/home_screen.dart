@@ -238,10 +238,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             if (kDebugMode) ...[
               const SizedBox(height: 8),
               Center(
-                child: TextButton.icon(
-                  onPressed: _addSample,
-                  icon: const Icon(Icons.bug_report_outlined, size: 18),
-                  label: const Text('Add sample shipment (debug)'),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _addSample,
+                      icon: const Icon(Icons.bug_report_outlined, size: 18),
+                      label: const Text('Add sample shipment (debug)'),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => context.push('/map-test'),
+                      icon: const Icon(Icons.map_outlined, size: 18),
+                      label: const Text('Map test (debug)'),
+                    ),
+                  ],
                 ),
               ),
             ],

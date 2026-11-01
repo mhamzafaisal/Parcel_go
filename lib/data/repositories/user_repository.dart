@@ -12,6 +12,11 @@ class UserRepository {
     if (!doc.exists) return null;
     return AppUser.fromMap(doc.data()!);
   }
+  Stream<AppUser?> watchUser(String uid) {
+    return _users.doc(uid).snapshots().map(
+          (doc) => doc.exists ? AppUser.fromMap(doc.data()!) : null,
+        );
+  }
 
   Future<void> createUser(AppUser user) {
     return _users.doc(user.uid).set(user.toCreateMap());

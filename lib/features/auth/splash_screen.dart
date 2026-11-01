@@ -1,45 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/theme.dart';
 import '../../data/services/onboarding_storage.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../data/repositories/user_repository.dart';
+import 'auth_providers.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
+  bool _failed = false;
+
   @override
   void initState() {
     super.initState();
     _start();
   }
 
-    Future<void> _start() async {
-    await Future.delayed(const Duration(seconds: 2));
-    final seen = await OnboardingStorage.isSeen();
-    if (!mounted) return;
-    if (!seen) {
-      context.go('/onboarding');
-      return;
+  Future<void> _loadSession() async {
+    final user = await ref.read(authStateProvider.future);
+    if (user != null) {
+      await ref.read(appUserProvider.future);
     }
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      context.go('/login');
-      return;
-    }
+  }
+
+  Future<void> _start() async {
+    if (_failed) setState(() => _failed = false);
     try {
-      final profile = await UserRepository().getUser(user.uid);
+      await Future.wait([
+        Future.delayed(const Duration(seconds: 2)),
+        _loadSession(),
+      ]);
+      final seen = await OnboardingStorage.isSeen();
       if (!mounted) return;
-      context.go(UserRepository.homeRouteFor(profile));
+      // Asli manzil router khud tay karega (login, role select, customer ya rider)
+      context.go(seen ? '/home' : '/onboarding');
     } catch (_) {
-      if (!mounted) return;
-      context.go('/login');
+      if (mounted) setState(() => _failed = true);
     }
+  }
+
+  void _retry() {
+    ref.invalidate(authStateProvider);
+    ref.invalidate(appUserProvider);
+    _start();
   }
 
   @override
@@ -55,20 +63,34 @@ class _SplashScreenState extends State<SplashScreen> {
             opacity: value.clamp(0.0, 1.0),
             child: Transform.scale(scale: value, child: child),
           ),
-          child: const Column(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.local_shipping_rounded,
+              const Icon(Icons.local_shipping_rounded,
                   size: 84, color: AppColors.cream),
-              SizedBox(height: 16),
-              Text('ParcelGo',
+              const SizedBox(height: 16),
+              const Text('ParcelGo',
                   style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
                       color: AppColors.cream)),
-              SizedBox(height: 8),
-              Text('Send. Track. Delivered.',
+              const SizedBox(height: 8),
+              const Text('Send. Track. Delivered.',
                   style: TextStyle(fontSize: 15, color: AppColors.cream)),
+              if (_failed) ...[
+                const SizedBox(height: 28),
+                const Text('Could not load. Check your internet.',
+                    style: TextStyle(color: AppColors.cream)),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: _retry,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.cream,
+                    side: const BorderSide(color: AppColors.cream),
+                  ),
+                  child: const Text('Retry'),
+                ),
+              ],
             ],
           ),
         ),

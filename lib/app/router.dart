@@ -15,7 +15,9 @@ import '../features/customer/home/home_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/rider/home/rider_home_screen.dart';
 import '../features/customer/create_shipment/current_location_screen.dart';
-
+import '../features/customer/create_shipment/create_shipment_screen.dart';
+import '../features/customer/create_shipment/location_picker_screen.dart';
+ 
 /// Login ya profile badalte hi router ko dobara check karwata hai
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
@@ -23,59 +25,63 @@ class _RouterRefresh extends ChangeNotifier {
     ref.listen(appUserProvider, (prev, next) => notifyListeners());
   }
 }
-
+ 
 const _publicRoutes = ['/splash', '/onboarding', '/login', '/otp'];
 const _authFlowRoutes = ['/login', '/otp', '/role-select'];
-
+ 
 String? _redirect(Ref ref, String loc) {
   final auth = ref.read(authStateProvider);
   final profileAsync = ref.read(appUserProvider);
   final atSplash = loc == '/splash';
-
+ 
   // 1. Firebase abhi check kar raha hai ke login hai ya nahi
   if (auth.isLoading) return atSplash ? null : '/splash';
-
+ 
   // 2. Logged out
   final firebaseUser = auth.value;
   if (firebaseUser == null) {
     return _publicRoutes.contains(loc) ? null : '/login';
   }
-
+ 
   // 3. Splash aur onboarding apna kaam khud karte hain
   if (atSplash || loc == '/onboarding') return null;
-
+ 
   // 4. Profile load ho raha hai
   if (profileAsync.isLoading) {
     return _authFlowRoutes.contains(loc) ? null : '/splash';
   }
-
+ 
   // 5. Profile load nahi ho saka (network wagera): abhi kuch nahi karte
   if (profileAsync.hasError) return null;
-
+ 
   // 6. Login hai magar profile nahi bani
   final profile = profileAsync.value;
   if (profile == null) {
     return loc == '/role-select' ? null : '/role-select';
   }
-
+ 
   // 7. Role ke hisaab se
   final home = UserRepository.homeRouteFor(profile);
   if (_authFlowRoutes.contains(loc)) return home;
-
+ 
   if (profile.role == UserRole.customer && loc.startsWith('/rider')) {
     return home;
   }
   if (profile.role == UserRole.rider &&
-      (loc == '/home' || loc == '/history' || loc == '/profile')) {
+      (loc == '/home' ||
+          loc == '/history' ||
+          loc == '/profile' ||
+          loc == '/create-shipment' ||
+          loc == '/pick-location')) {
     return home;
   }
   return null;
 }
-
+ 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _RouterRefresh(ref);
   ref.onDispose(refresh.dispose);
-
+ 
   final router = GoRouter(
     initialLocation: '/splash',
     refreshListenable: refresh,
@@ -112,6 +118,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/map-test',
         builder: (context, state) => const CurrentLocationScreen(),
+      ),
+      GoRoute(
+        path: '/create-shipment',
+        builder: (context, state) => const CreateShipmentScreen(),
+      ),
+      GoRoute(
+        path: '/pick-location',
+        builder: (context, state) {
+          final args = state.extra;
+          return LocationPickerScreen(
+            args: args is PickerArgs
+                ? args
+                : const PickerArgs(title: 'Choose location'),
+          );
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

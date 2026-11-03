@@ -128,7 +128,7 @@ class CreateShipmentScreen extends ConsumerWidget {
                 } else if (tooClose) {
                   _snack(context, 'Pickup and drop are too close');
                 } else {
-                  _snack(context, 'Locations saved. Parcel details come in Task 12.');
+                        context.push('/parcel-details');
                 }
               },
             ),

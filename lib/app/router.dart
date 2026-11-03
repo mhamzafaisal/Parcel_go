@@ -17,6 +17,7 @@ import '../features/rider/home/rider_home_screen.dart';
 import '../features/customer/create_shipment/current_location_screen.dart';
 import '../features/customer/create_shipment/create_shipment_screen.dart';
 import '../features/customer/create_shipment/location_picker_screen.dart';
+import '../features/customer/create_shipment/parcel_details_screen.dart';
  
 /// Login ya profile badalte hi router ko dobara check karwata hai
 class _RouterRefresh extends ChangeNotifier {
@@ -72,7 +73,8 @@ String? _redirect(Ref ref, String loc) {
           loc == '/history' ||
           loc == '/profile' ||
           loc == '/create-shipment' ||
-          loc == '/pick-location')) {
+          loc == '/pick-location'  ||
+          loc == '/parcel-details')) {
     return home;
   }
   return null;
@@ -133,6 +135,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 : const PickerArgs(title: 'Choose location'),
           );
         },
+      ),
+      GoRoute(
+        path: '/parcel-details',
+        builder: (context, state) => const ParcelDetailsScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

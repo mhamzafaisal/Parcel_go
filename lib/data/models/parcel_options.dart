@@ -29,3 +29,12 @@ enum DeliverySpeed {
   final String label;
   const DeliverySpeed(this.value, this.label);
 }
+
+enum PaymentPayer {
+  sender('sender', 'Sender pays at pickup'),
+  receiver('receiver', 'Receiver pays on delivery');
+
+  final String value;
+  final String label;
+  const PaymentPayer(this.value, this.label);
+}

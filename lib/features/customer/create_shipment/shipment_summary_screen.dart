@@ -215,8 +215,7 @@ class ShipmentSummaryScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               PrimaryButton(
                 label: 'Continue to payment',
-                onPressed: () => _snack(
-                    context, 'Price saved. Payment comes in Task 14.'),
+                onPressed: () => context.push('/payment'),
               ),
             ],
           ],

@@ -68,15 +68,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
  
-  Future<void> _addSample() async {
-    final uid = ref.read(authServiceProvider).currentUser?.uid;
-    if (uid == null) return;
-    try {
-      await ref.read(shipmentRepositoryProvider).createSample(uid);
-    } catch (_) {
-      if (mounted) _snack('Could not add sample. Check Firestore rules.');
-    }
-  }
+
  
   @override
   void dispose() {
@@ -243,21 +235,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             if (kDebugMode) ...[
               const SizedBox(height: 8),
               Center(
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  children: [
-                    TextButton.icon(
-                      onPressed: _addSample,
-                      icon: const Icon(Icons.bug_report_outlined, size: 18),
-                      label: const Text('Add sample shipment (debug)'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => context.push('/map-test'),
-                      icon: const Icon(Icons.map_outlined, size: 18),
-                      label: const Text('Map test (debug)'),
-                    ),
-                  ],
+                child: TextButton.icon(
+                  onPressed: () => context.push('/map-test'),
+                  icon: const Icon(Icons.map_outlined, size: 18),
+                  label: const Text('Map test (debug)'),
                 ),
               ),
             ],

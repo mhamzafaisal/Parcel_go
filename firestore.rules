@@ -6,6 +6,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Maujooda shipment ka malik
+    function ownsShipment(shipmentId) {
+      return get(/databases/$(database)/documents/shipments/$(shipmentId)).data.customerId == request.auth.uid;
+    }
+
+    // Isi batch mein ban rahi shipment ka malik
+    function willOwnShipment(shipmentId) {
+      return getAfter(/databases/$(database)/documents/shipments/$(shipmentId)).data.customerId == request.auth.uid;
+    }
+
     match /users/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
 
@@ -27,16 +37,80 @@ service cloud.firestore {
 
       allow delete: if false;
     }
+
     match /shipments/{shipmentId} {
       allow read: if signedIn()
         && resource.data.customerId == request.auth.uid;
 
-      // Abhi sirf testing ke liye. Task 16 mein proper rules aayenge.
       allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+             'trackingId', 'customerId', 'riderId', 'status', 'pickup', 'drop',
+             'category', 'size', 'weightKg', 'fragile', 'speed', 'receiverName',
+             'receiverPhone', 'notes', 'hasPhoto', 'price', 'etaMinutes',
+             'roadKm', 'priceLines', 'paymentMethod', 'payer', 'createdAt'])
         && request.resource.data.customerId == request.auth.uid
-        && request.resource.data.status == 'created';
+        && request.resource.data.trackingId == shipmentId
+        && request.resource.data.riderId == null
+        && request.resource.data.status == 'created'
+        && request.resource.data.category in ['documents', 'clothes', 'electronics', 'food', 'other']
+        && request.resource.data.size in ['small', 'medium', 'large']
+        && request.resource.data.speed in ['standard', 'express']
+        && request.resource.data.weightKg is number
+        && request.resource.data.weightKg >= 0.1
+        && request.resource.data.weightKg <= 25
+        && request.resource.data.price is int
+        && request.resource.data.price >= 150
+        && request.resource.data.price <= 50000
+        && request.resource.data.paymentMethod == 'cash'
+        && request.resource.data.payer in ['sender', 'receiver']
+        && request.resource.data.receiverName is string
+        && request.resource.data.receiverName.size() >= 2
+        && request.resource.data.receiverName.size() <= 60
+        && request.resource.data.receiverPhone.matches('^\\+923[0-9]{9}$')
+        && request.resource.data.notes.size() <= 150
+        && request.resource.data.pickup.address is string
+        && request.resource.data.pickup.lat is number
+        && request.resource.data.pickup.lng is number
+        && request.resource.data.drop.address is string
+        && request.resource.data.drop.lat is number
+        && request.resource.data.drop.lng is number
+        && request.resource.data.createdAt == request.time;
 
       allow update, delete: if false;
+
+      match /events/{eventId} {
+        allow read: if signedIn() && ownsShipment(shipmentId);
+        allow create: if signedIn()
+          && willOwnShipment(shipmentId)
+          && request.resource.data.keys().hasOnly(['status', 'at', 'by'])
+          && request.resource.data.status == 'created'
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.at == request.time;
+        allow update, delete: if false;
+      }
+
+      match /photos/{photoId} {
+        allow read: if signedIn() && ownsShipment(shipmentId);
+        allow create: if signedIn()
+          && willOwnShipment(shipmentId)
+          && photoId == 'main'
+          && request.resource.data.keys().hasOnly(['data', 'createdAt'])
+          && request.resource.data.data is bytes
+          && request.resource.data.data.size() <= 307200
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+
+      match /secret/{docId} {
+        allow read: if signedIn() && ownsShipment(shipmentId);
+        allow create: if signedIn()
+          && willOwnShipment(shipmentId)
+          && docId == 'otp'
+          && request.resource.data.keys().hasOnly(['code'])
+          && request.resource.data.code is string
+          && request.resource.data.code.size() == 6;
+        allow update, delete: if false;
+      }
     }
   }
 }

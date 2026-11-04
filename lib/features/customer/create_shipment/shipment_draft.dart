@@ -2,7 +2,8 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/parcel_options.dart';
 import '../../../data/models/place_result.dart';
-
+import 'package:latlong2/latlong.dart';
+import '../../../data/services/pricing_service.dart';
 class ShipmentDraft {
   final PlaceResult? pickup;
   final PlaceResult? drop;
@@ -112,3 +113,23 @@ class ShipmentDraftNotifier extends Notifier<ShipmentDraft> {
 final shipmentDraftProvider =
     NotifierProvider<ShipmentDraftNotifier, ShipmentDraft>(
         ShipmentDraftNotifier.new);
+
+extension ShipmentDraftPricing on ShipmentDraft {
+  double? get straightKm => hasLocations
+      ? const Distance()
+          .as(LengthUnit.Kilometer, pickup!.latLng, drop!.latLng)
+      : null;
+
+  PriceBreakdown? get quote {
+    final km = straightKm;
+    final w = weightKg;
+    if (km == null || w == null) return null;
+    return PricingService.calculate(
+      straightKm: km,
+      size: size,
+      weightKg: w,
+      fragile: fragile,
+      speed: speed,
+    );
+  }
+}

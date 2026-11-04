@@ -18,7 +18,9 @@ import '../features/customer/create_shipment/current_location_screen.dart';
 import '../features/customer/create_shipment/create_shipment_screen.dart';
 import '../features/customer/create_shipment/location_picker_screen.dart';
 import '../features/customer/create_shipment/parcel_details_screen.dart';
- import '../features/customer/create_shipment/shipment_summary_screen.dart';
+import '../features/customer/create_shipment/shipment_summary_screen.dart';
+import '../features/customer/create_shipment/booking_confirmed_screen.dart';
+import '../features/customer/create_shipment/payment_screen.dart';
 /// Login ya profile badalte hi router ko dobara check karwata hai
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
@@ -38,6 +40,8 @@ const _customerOnlyRoutes = [
   '/pick-location',
   '/parcel-details',
   '/shipment-summary',
+  '/payment',
+  '/booking-confirmed',
 ];
 
 String? _redirect(Ref ref, String loc) {
@@ -147,6 +151,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/shipment-summary',
         builder: (context, state) => const ShipmentSummaryScreen(),
+      ),
+      GoRoute(
+        path: '/payment',
+        builder: (context, state) => const PaymentScreen(),
+      ),
+      GoRoute(
+        path: '/booking-confirmed',
+        redirect: (context, state) =>
+            state.extra is BookingConfirmation ? null : '/home',
+        builder: (context, state) =>
+            BookingConfirmedScreen(data: state.extra as BookingConfirmation),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

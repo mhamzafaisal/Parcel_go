@@ -155,7 +155,8 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
           notes: _notes.text.trim(),
           photo: _photo,
         );
-    _snack('Details saved. Price estimate comes in Task 13.');
+    context.push('/shipment-summary');
+        
   }
 
   @override
@@ -290,7 +291,7 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  activeColor: AppColors.green,
+                  activeThumbColor: AppColors.green,
                   title: Text('Fragile item',
                       style: Theme.of(context).textTheme.titleMedium),
                   subtitle: const Text('Rider will handle it with extra care'),

@@ -18,7 +18,7 @@ import '../features/customer/create_shipment/current_location_screen.dart';
 import '../features/customer/create_shipment/create_shipment_screen.dart';
 import '../features/customer/create_shipment/location_picker_screen.dart';
 import '../features/customer/create_shipment/parcel_details_screen.dart';
- 
+ import '../features/customer/create_shipment/shipment_summary_screen.dart';
 /// Login ya profile badalte hi router ko dobara check karwata hai
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
@@ -29,7 +29,17 @@ class _RouterRefresh extends ChangeNotifier {
  
 const _publicRoutes = ['/splash', '/onboarding', '/login', '/otp'];
 const _authFlowRoutes = ['/login', '/otp', '/role-select'];
- 
+
+const _customerOnlyRoutes = [
+  '/home',
+  '/history',
+  '/profile',
+  '/create-shipment',
+  '/pick-location',
+  '/parcel-details',
+  '/shipment-summary',
+];
+
 String? _redirect(Ref ref, String loc) {
   final auth = ref.read(authStateProvider);
   final profileAsync = ref.read(appUserProvider);
@@ -67,14 +77,8 @@ String? _redirect(Ref ref, String loc) {
  
   if (profile.role == UserRole.customer && loc.startsWith('/rider')) {
     return home;
-  }
-  if (profile.role == UserRole.rider &&
-      (loc == '/home' ||
-          loc == '/history' ||
-          loc == '/profile' ||
-          loc == '/create-shipment' ||
-          loc == '/pick-location'  ||
-          loc == '/parcel-details')) {
+}
+  if (profile.role == UserRole.rider && _customerOnlyRoutes.contains(loc)) {
     return home;
   }
   return null;
@@ -139,6 +143,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/parcel-details',
         builder: (context, state) => const ParcelDetailsScreen(),
+      ),
+      GoRoute(
+        path: '/shipment-summary',
+        builder: (context, state) => const ShipmentSummaryScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

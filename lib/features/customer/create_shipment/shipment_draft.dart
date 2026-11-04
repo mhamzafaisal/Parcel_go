@@ -14,6 +14,7 @@ class ShipmentDraft {
   final String receiverPhone;
   final String notes;
   final Uint8List? photo;
+  final DeliverySpeed speed;
 
   const ShipmentDraft({
     this.pickup,
@@ -26,9 +27,14 @@ class ShipmentDraft {
     this.receiverPhone = '',
     this.notes = '',
     this.photo,
+    this.speed = DeliverySpeed.standard,
   });
 
-  ShipmentDraft copyWith({PlaceResult? pickup, PlaceResult? drop}) {
+  ShipmentDraft copyWith({
+    PlaceResult? pickup,
+    PlaceResult? drop,
+    DeliverySpeed? speed,
+  }) {
     return ShipmentDraft(
       pickup: pickup ?? this.pickup,
       drop: drop ?? this.drop,
@@ -40,6 +46,7 @@ class ShipmentDraft {
       receiverPhone: receiverPhone,
       notes: notes,
       photo: photo,
+      speed: speed ?? this.speed,
     );
   }
 
@@ -54,6 +61,8 @@ class ShipmentDraftNotifier extends Notifier<ShipmentDraft> {
 
   void setDrop(PlaceResult p) => state = state.copyWith(drop: p);
 
+  void setSpeed(DeliverySpeed s) => state = state.copyWith(speed: s);
+
   void swap() {
     final s = state;
     state = ShipmentDraft(
@@ -67,6 +76,7 @@ class ShipmentDraftNotifier extends Notifier<ShipmentDraft> {
       receiverPhone: s.receiverPhone,
       notes: s.notes,
       photo: s.photo,
+      speed: s.speed,
     );
   }
 
@@ -92,6 +102,7 @@ class ShipmentDraftNotifier extends Notifier<ShipmentDraft> {
       receiverPhone: receiverPhone,
       notes: notes,
       photo: photo,
+      speed: s.speed,
     );
   }
 

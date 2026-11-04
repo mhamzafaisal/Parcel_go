@@ -20,3 +20,12 @@ enum ParcelSize {
   final String hint;
   const ParcelSize(this.value, this.label, this.hint);
 }
+
+enum DeliverySpeed {
+  standard('standard', 'Standard'),
+  express('express', 'Express');
+
+  final String value;
+  final String label;
+  const DeliverySpeed(this.value, this.label);
+}

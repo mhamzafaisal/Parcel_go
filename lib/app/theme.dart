@@ -9,6 +9,7 @@ class AppColors {
   static const border = Color(0xFFE6E2D6);
   static const shadow = Color(0x14000000);
   static const danger = Color(0xFFC0492F);
+  static const purple = Color(0xFF8B5CF9);
 }
 
 class AppTheme {

@@ -305,7 +305,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                         shrinkWrap: true,
                         padding: EdgeInsets.zero,
                         itemCount: _results.length,
-                        separatorBuilder: (_, __) =>
+                        separatorBuilder: (_, _) =>
                             const Divider(height: 1, color: AppColors.border),
                         itemBuilder: (context, i) {
                           final p = _results[i];

@@ -17,6 +17,20 @@ class UserRepository {
           (doc) => doc.exists ? AppUser.fromMap(doc.data()!) : null,
         );
   }
+  Future<void> setRiderStatus(
+    String uid, {
+    required bool online,
+    double? lat,
+    double? lng,
+  }) {
+    return _users.doc(uid).update({
+      'isOnline': online,
+      if (lat != null && lng != null) ...{
+        'location': {'lat': lat, 'lng': lng},
+        'locationAt': FieldValue.serverTimestamp(),
+      },
+    });
+  }
 
   Future<void> createUser(AppUser user) {
     return _users.doc(user.uid).set(user.toCreateMap());

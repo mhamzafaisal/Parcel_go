@@ -21,6 +21,9 @@ import '../features/customer/create_shipment/parcel_details_screen.dart';
 import '../features/customer/create_shipment/shipment_summary_screen.dart';
 import '../features/customer/create_shipment/booking_confirmed_screen.dart';
 import '../features/customer/create_shipment/payment_screen.dart';
+import '../core/widgets/rider_shell.dart';
+import '../features/rider/earnings/rider_earnings_screen.dart';
+import '../features/rider/profile/rider_profile_screen.dart';
 /// Login ya profile badalte hi router ko dobara check karwata hai
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
@@ -121,9 +124,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/role-select',
         builder: (context, state) => const RoleSelectScreen(),
       ),
-      GoRoute(
-        path: '/rider-home',
-        builder: (context, state) => const RiderHomeScreen(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            RiderShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/rider-home',
+              builder: (context, state) => const RiderHomeScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/rider-earnings',
+              builder: (context, state) => const RiderEarningsScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/rider-profile',
+              builder: (context, state) => const RiderProfileScreen(),
+            ),
+          ]),
+        ],
       ),
       GoRoute(
         path: '/map-test',

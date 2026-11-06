@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/parcel_options.dart';
 import '../../../data/repositories/shipment_repository.dart';

@@ -13,12 +13,6 @@ import 'shipment_draft.dart';
 class ShipmentSummaryScreen extends ConsumerWidget {
   const ShipmentSummaryScreen({super.key});
 
-  void _snack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final draft = ref.watch(shipmentDraftProvider);

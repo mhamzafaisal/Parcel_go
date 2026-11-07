@@ -57,4 +57,9 @@ void main() {
     expect(PricingService.isInRange(40), isTrue);
     expect(PricingService.isInRange(40.1), isFalse);
   });
+
+  test('rider earns 80 percent of the price', () {
+    expect(PricingService.riderEarning(290), 232);
+    expect(PricingService.riderEarning(150), 120);
+  });
 }

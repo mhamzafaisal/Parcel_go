@@ -19,4 +19,9 @@ class PlaceResult {
         'lat': latitude,
         'lng': longitude,
       };
+  factory PlaceResult.fromMap(Map<String, dynamic> m) => PlaceResult(
+      address: m['address'] as String? ?? '-',
+      latitude: (m['lat'] as num).toDouble(),
+      longitude: (m['lng'] as num).toDouble(),
+      );
 }

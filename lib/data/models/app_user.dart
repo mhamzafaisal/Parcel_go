@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:latlong2/latlong.dart';
 
 enum UserRole { customer, rider }
 
@@ -9,6 +10,8 @@ class AppUser {
   final UserRole role;
   final bool isOnline;
   final double rating;
+  final LatLng? location;
+  final DateTime? locationAt;
 
   const AppUser({
     required this.uid,
@@ -17,6 +20,8 @@ class AppUser {
     required this.role,
     this.isOnline = false,
     this.rating = 0,
+    this.location,
+    this.locationAt,
   });
 
   Map<String, dynamic> toCreateMap() => {
@@ -29,12 +34,20 @@ class AppUser {
         'createdAt': FieldValue.serverTimestamp(),
       };
 
-  factory AppUser.fromMap(Map<String, dynamic> map) => AppUser(
-        uid: map['uid'] as String,
-        name: map['name'] as String,
-        phone: map['phone'] as String? ?? '',
-        role: UserRole.values.byName(map['role'] as String),
-        isOnline: map['isOnline'] as bool? ?? false,
-        rating: (map['rating'] as num?)?.toDouble() ?? 0,
-      );
+  factory AppUser.fromMap(Map<String, dynamic> map) {
+    final loc = map['location'];
+    final at = map['locationAt'];
+    return AppUser(
+      uid: map['uid'] as String,
+      name: map['name'] as String,
+      phone: map['phone'] as String? ?? '',
+      role: UserRole.values.byName(map['role'] as String),
+      isOnline: map['isOnline'] as bool? ?? false,
+      rating: (map['rating'] as num?)?.toDouble() ?? 0,
+      location: loc is Map
+          ? LatLng((loc['lat'] as num).toDouble(), (loc['lng'] as num).toDouble())
+          : null,
+      locationAt: at is Timestamp ? at.toDate() : null,
+    );
+  }
 }

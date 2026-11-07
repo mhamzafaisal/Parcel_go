@@ -62,6 +62,10 @@ class PricingService {
   static const double expressSurcharge = 0.5;
   static const int roundTo = 10;
   static const double maxDistanceKm = 40;
+    /// Rider ko price ka kitna hissa milta hai (andaza)
+  static const double riderShare = 0.8;
+
+  static int riderEarning(int total) => (total * riderShare).round();
   static const Map<ParcelSize, int> sizeFees = {
     ParcelSize.small: 0,
     ParcelSize.medium: 50,

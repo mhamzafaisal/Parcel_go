@@ -41,7 +41,7 @@ class ShipmentRepository {
     return Shipment.fromDoc(snap.docs.first);
   }
 
-  /// Shipment, pehla event, OTP aur (agar ho) photo ek hi batch mein
+  /// Shipment, job, pehla event, OTP aur (agar ho) photo ek hi batch mein
   /// save hote hain: ya sab ho jata hai, ya kuch bhi nahi.
   Future<BookingResult> createShipment({
     required String uid,
@@ -91,6 +91,25 @@ class ShipmentRepository {
         ],
         'paymentMethod': 'cash',
         'payer': payer.value,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Riders ke liye chhota public job (receiver ki details ke baghair)
+      batch.set(_db.collection('jobs').doc(trackingId), {
+        'trackingId': trackingId,
+        'customerId': uid,
+        'status': 'open',
+        'riderId': null,
+        'pickup': pickup.toMap(),
+        'drop': drop.toMap(),
+        'category': category.value,
+        'size': size.value,
+        'weightKg': weightKg,
+        'fragile': fragile,
+        'speed': speed.value,
+        'price': price.total,
+        'riderEarning': PricingService.riderEarning(price.total),
+        'roadKm': double.parse(price.roadKm.toStringAsFixed(1)),
         'createdAt': FieldValue.serverTimestamp(),
       });
 

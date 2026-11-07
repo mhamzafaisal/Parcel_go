@@ -10,6 +10,7 @@ import '../../../data/services/auth_service.dart';
 import '../../../data/services/location_service.dart';
 import '../../auth/auth_providers.dart';
 import 'rider_providers.dart';
+import 'nearby_jobs_section.dart';
 
 class RiderHomeScreen extends ConsumerStatefulWidget {
   const RiderHomeScreen({super.key});
@@ -155,6 +156,10 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            if (online) ...[
+              const NearbyJobsSection(),
+              const SizedBox(height: 16),
+            ],
 
             // Today's earnings
             AppCard(

@@ -16,6 +16,14 @@ service cloud.firestore {
       return getAfter(/databases/$(database)/documents/shipments/$(shipmentId)).data.customerId == request.auth.uid;
     }
 
+    function isRider() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'rider';
+    }
+
+    function shipmentAfter(id) {
+      return getAfter(/databases/$(database)/documents/shipments/$(id)).data;
+    }
+
     match /users/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
 
@@ -122,6 +130,36 @@ service cloud.firestore {
           && request.resource.data.code.size() == 6;
         allow update, delete: if false;
       }
+    }
+
+    match /jobs/{jobId} {
+      // Rider sirf khule jobs dekhe; customer aur assigned rider apna job
+      allow read: if signedIn() && (
+        (resource.data.status == 'open' && isRider())
+        || resource.data.customerId == request.auth.uid
+        || resource.data.riderId == request.auth.uid);
+
+      // Job sirf usi batch mein ban sakta hai jisme uski shipment ban rahi ho
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+             'trackingId', 'customerId', 'status', 'riderId', 'pickup', 'drop',
+             'category', 'size', 'weightKg', 'fragile', 'speed', 'price',
+             'riderEarning', 'roadKm', 'createdAt'])
+        && request.resource.data.trackingId == jobId
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.status == 'open'
+        && request.resource.data.riderId == null
+        && shipmentAfter(jobId).customerId == request.auth.uid
+        && shipmentAfter(jobId).price == request.resource.data.price
+        && shipmentAfter(jobId).pickup == request.resource.data.pickup
+        && shipmentAfter(jobId).drop == request.resource.data.drop
+        && request.resource.data.riderEarning is int
+        && request.resource.data.riderEarning >= 0
+        && request.resource.data.riderEarning <= request.resource.data.price
+        && request.resource.data.createdAt == request.time;
+
+      // Accept karna Task 17 mein
+      allow update, delete: if false;
     }
   }
 }

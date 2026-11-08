@@ -5,6 +5,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/status_chip.dart';
 import 'job_providers.dart';
+import 'package:go_router/go_router.dart';
 
 class ActiveJobCard extends ConsumerWidget {
   const ActiveJobCard({super.key});
@@ -111,10 +112,7 @@ class ActiveJobCard extends ConsumerWidget {
                 label: 'Continue delivery',
                 icon: Icons.navigation_outlined,
                 onPressed: () {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(const SnackBar(
-                        content: Text('Delivery steps come in Task 18')));
+                  context.push('/rider-delivery');
                 },
               ),
             ],

@@ -26,6 +26,7 @@ import '../features/rider/earnings/rider_earnings_screen.dart';
 import '../features/rider/profile/rider_profile_screen.dart';
 import '../data/services/job_matching.dart';
 import '../features/rider/jobs/job_request_screen.dart';
+import '../features/rider/delivery/delivery_screen.dart';
 /// Login ya profile badalte hi router ko dobara check karwata hai
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
@@ -160,6 +161,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             state.extra is NearbyJob ? null : '/rider-home',
         builder: (context, state) =>
             JobRequestScreen(nearby: state.extra as NearbyJob),
+      ),
+      GoRoute(
+        path: '/rider-delivery',
+        builder: (context, state) => const DeliveryScreen(),
       ),
       GoRoute(
         path: '/create-shipment',

@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:latlong2/latlong.dart';
+import 'parcel_options.dart';
 
 enum ShipmentStatus {
   created('created', 'Created'),
@@ -29,6 +31,9 @@ class Shipment {
   final String receiverName;
   final String receiverPhone;
   final String notes;
+  final LatLng? pickupPoint;
+  final LatLng? dropPoint;
+  final PaymentPayer? payer;
 
   const Shipment({
     required this.id,
@@ -43,7 +48,24 @@ class Shipment {
     this.receiverName = '',
     this.receiverPhone = '',
     this.notes = '',
+    this.pickupPoint,
+    this.dropPoint,
+    this.payer,
   });
+
+  static LatLng? _point(Map<String, dynamic> m) {
+    final lat = m['lat'];
+    final lng = m['lng'];
+    if (lat is num && lng is num) return LatLng(lat.toDouble(), lng.toDouble());
+    return null;
+  }
+
+  static PaymentPayer? _payer(String? v) {
+    for (final p in PaymentPayer.values) {
+      if (p.value == v) return p;
+    }
+    return null;
+  }
 
   factory Shipment.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data() ?? {};
@@ -64,6 +86,9 @@ class Shipment {
       receiverName: d['receiverName'] as String? ?? '',
       receiverPhone: d['receiverPhone'] as String? ?? '',
       notes: d['notes'] as String? ?? '',
+      pickupPoint: _point(pickup),
+      dropPoint: _point(drop),
+      payer: _payer(d['payer'] as String?),
     );
   }
 }

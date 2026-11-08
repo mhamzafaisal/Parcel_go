@@ -12,6 +12,7 @@ class AppUser {
   final double rating;
   final LatLng? location;
   final DateTime? locationAt;
+  final String? activeJobId;
 
   const AppUser({
     required this.uid,
@@ -22,6 +23,7 @@ class AppUser {
     this.rating = 0,
     this.location,
     this.locationAt,
+    this.activeJobId,
   });
 
   Map<String, dynamic> toCreateMap() => {
@@ -48,6 +50,7 @@ class AppUser {
           ? LatLng((loc['lat'] as num).toDouble(), (loc['lng'] as num).toDouble())
           : null,
       locationAt: at is Timestamp ? at.toDate() : null,
+      activeJobId: map['activeJobId'] as String?,
     );
   }
 }

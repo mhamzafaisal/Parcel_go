@@ -26,6 +26,9 @@ class Shipment {
   final ShipmentStatus status;
   final double price;
   final DateTime createdAt;
+  final String receiverName;
+  final String receiverPhone;
+  final String notes;
 
   const Shipment({
     required this.id,
@@ -37,6 +40,9 @@ class Shipment {
     required this.status,
     required this.price,
     required this.createdAt,
+    this.receiverName = '',
+    this.receiverPhone = '',
+    this.notes = '',
   });
 
   factory Shipment.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -55,6 +61,9 @@ class Shipment {
       price: (d['price'] as num?)?.toDouble() ?? 0,
       // Naye likhe gaye document mein server time kuch pal null hota hai
       createdAt: ts is Timestamp ? ts.toDate() : DateTime.now(),
+      receiverName: d['receiverName'] as String? ?? '',
+      receiverPhone: d['receiverPhone'] as String? ?? '',
+      notes: d['notes'] as String? ?? '',
     );
   }
 }

@@ -40,7 +40,12 @@ class ShipmentRepository {
     if (snap.docs.isEmpty) return null;
     return Shipment.fromDoc(snap.docs.first);
   }
-
+  Stream<Shipment?> watchShipment(String id) {
+    return _col
+        .doc(id)
+        .snapshots()
+        .map((doc) => doc.exists ? Shipment.fromDoc(doc) : null);
+  }
   /// Shipment, job, pehla event, OTP aur (agar ho) photo ek hi batch mein
   /// save hote hain: ya sab ho jata hai, ya kuch bhi nahi.
   Future<BookingResult> createShipment({

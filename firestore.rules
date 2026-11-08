@@ -6,22 +6,53 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Maujooda shipment ka malik
-    function ownsShipment(shipmentId) {
-      return get(/databases/$(database)/documents/shipments/$(shipmentId)).data.customerId == request.auth.uid;
-    }
-
-    // Isi batch mein ban rahi shipment ka malik
-    function willOwnShipment(shipmentId) {
-      return getAfter(/databases/$(database)/documents/shipments/$(shipmentId)).data.customerId == request.auth.uid;
-    }
-
     function isRider() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'rider';
     }
 
-    function shipmentAfter(id) {
-      return getAfter(/databases/$(database)/documents/shipments/$(id)).data;
+    // Rider online ho aur uske paas pehle se koi active job na ho
+    function riderIsFree() {
+      let u = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return u.role == 'rider'
+        && u.isOnline == true
+        && u.get('activeJobId', null) == null;
+    }
+
+    // Maujooda shipment ka customer
+    function ownsShipment(shipmentId) {
+      return get(/databases/$(database)/documents/shipments/$(shipmentId)).data.customerId == request.auth.uid;
+    }
+
+    // Customer ya assigned rider
+    function canViewShipment(shipmentId) {
+      let s = get(/databases/$(database)/documents/shipments/$(shipmentId)).data;
+      return s.customerId == request.auth.uid || s.riderId == request.auth.uid;
+    }
+
+    // Isi batch mein ban rahi shipment ka customer
+    function willOwnShipment(shipmentId) {
+      return getAfter(/databases/$(database)/documents/shipments/$(shipmentId)).data.customerId == request.auth.uid;
+    }
+
+    // Isi commit ke baad is shipment ka rider wohi hoga
+    function riderAssignedAfter(shipmentId) {
+      let s = getAfter(/databases/$(database)/documents/shipments/$(shipmentId)).data;
+      return s.riderId == request.auth.uid && s.status == 'assigned';
+    }
+
+    // Isi commit ke baad job is rider ke naam "taken" hoga
+    function jobTakenBy(jobId, uid) {
+      let j = getAfter(/databases/$(database)/documents/jobs/$(jobId)).data;
+      return j.status == 'taken' && j.riderId == uid;
+    }
+
+    // Job ki cheezein shipment se milti hon
+    function shipmentMatchesJob(id, job) {
+      let s = getAfter(/databases/$(database)/documents/shipments/$(id)).data;
+      return s.customerId == request.auth.uid
+        && s.price == job.price
+        && s.pickup == job.pickup
+        && s.drop == job.drop;
     }
 
     match /users/{uid} {
@@ -44,7 +75,7 @@ service cloud.firestore {
         && request.resource.data.role == resource.data.role
         && request.resource.data.rating == resource.data.rating
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['name', 'isOnline', 'location', 'locationAt'])
+             .hasOnly(['name', 'isOnline', 'location', 'locationAt', 'activeJobId'])
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 2
         && request.resource.data.isOnline is bool
@@ -52,14 +83,19 @@ service cloud.firestore {
             || resource.data.role == 'rider')
         && (!('location' in request.resource.data)
             || (request.resource.data.location.lat is number
-                && request.resource.data.location.lng is number));
+                && request.resource.data.location.lng is number))
+        && (!('activeJobId' in request.resource.data.diff(resource.data).affectedKeys())
+            || (resource.data.get('activeJobId', null) == null
+                && request.resource.data.activeJobId is string
+                && jobTakenBy(request.resource.data.activeJobId, uid)));
 
       allow delete: if false;
     }
 
     match /shipments/{shipmentId} {
       allow read: if signedIn()
-        && resource.data.customerId == request.auth.uid;
+        && (resource.data.customerId == request.auth.uid
+            || resource.data.riderId == request.auth.uid);
 
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly([
@@ -95,21 +131,42 @@ service cloud.firestore {
         && request.resource.data.drop.lng is number
         && request.resource.data.createdAt == request.time;
 
-      allow update, delete: if false;
+      // Rider job accept karta hai: created se assigned, sirf apne naam
+      allow update: if signedIn()
+        && resource.data.riderId == null
+        && resource.data.status == 'created'
+        && request.resource.data.status == 'assigned'
+        && request.resource.data.riderId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'riderId', 'assignedAt'])
+        && request.resource.data.assignedAt == request.time
+        && jobTakenBy(shipmentId, request.auth.uid);
+
+      allow delete: if false;
 
       match /events/{eventId} {
-        allow read: if signedIn() && ownsShipment(shipmentId);
+        allow read: if signedIn() && canViewShipment(shipmentId);
+
         allow create: if signedIn()
           && willOwnShipment(shipmentId)
           && request.resource.data.keys().hasOnly(['status', 'at', 'by'])
           && request.resource.data.status == 'created'
           && request.resource.data.by == request.auth.uid
           && request.resource.data.at == request.time;
+
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(['status', 'at', 'by'])
+          && request.resource.data.status == 'assigned'
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.at == request.time
+          && riderAssignedAfter(shipmentId);
+
         allow update, delete: if false;
       }
 
       match /photos/{photoId} {
-        allow read: if signedIn() && ownsShipment(shipmentId);
+        allow read: if signedIn() && canViewShipment(shipmentId);
+
         allow create: if signedIn()
           && willOwnShipment(shipmentId)
           && photoId == 'main'
@@ -117,17 +174,21 @@ service cloud.firestore {
           && request.resource.data.data is bytes
           && request.resource.data.data.size() <= 307200
           && request.resource.data.createdAt == request.time;
+
         allow update, delete: if false;
       }
 
+      // OTP sirf customer padh sakta hai. Rider ko nahi.
       match /secret/{docId} {
         allow read: if signedIn() && ownsShipment(shipmentId);
+
         allow create: if signedIn()
           && willOwnShipment(shipmentId)
           && docId == 'otp'
           && request.resource.data.keys().hasOnly(['code'])
           && request.resource.data.code is string
           && request.resource.data.code.size() == 6;
+
         allow update, delete: if false;
       }
     }
@@ -149,17 +210,24 @@ service cloud.firestore {
         && request.resource.data.customerId == request.auth.uid
         && request.resource.data.status == 'open'
         && request.resource.data.riderId == null
-        && shipmentAfter(jobId).customerId == request.auth.uid
-        && shipmentAfter(jobId).price == request.resource.data.price
-        && shipmentAfter(jobId).pickup == request.resource.data.pickup
-        && shipmentAfter(jobId).drop == request.resource.data.drop
+        && shipmentMatchesJob(jobId, request.resource.data)
         && request.resource.data.riderEarning is int
         && request.resource.data.riderEarning >= 0
         && request.resource.data.riderEarning <= request.resource.data.price
         && request.resource.data.createdAt == request.time;
 
-      // Accept karna Task 17 mein
-      allow update, delete: if false;
+      // Accept: sirf khula job, sirf free online rider, sirf apne naam
+      allow update: if signedIn()
+        && resource.data.status == 'open'
+        && resource.data.riderId == null
+        && request.resource.data.status == 'taken'
+        && request.resource.data.riderId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'riderId', 'takenAt'])
+        && request.resource.data.takenAt == request.time
+        && riderIsFree();
+
+      allow delete: if false;
     }
   }
 }

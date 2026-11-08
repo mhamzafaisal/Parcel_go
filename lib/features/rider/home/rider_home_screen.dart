@@ -11,6 +11,7 @@ import '../../../data/services/location_service.dart';
 import '../../auth/auth_providers.dart';
 import 'rider_providers.dart';
 import 'nearby_jobs_section.dart';
+import 'active_job_card.dart';
 
 class RiderHomeScreen extends ConsumerStatefulWidget {
   const RiderHomeScreen({super.key});
@@ -37,6 +38,10 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
 
   Future<void> _toggle(bool goOnline) async {
     if (_busy) return;
+    if (!goOnline && ref.read(appUserProvider).value?.activeJobId != null) {
+      _snack('Finish your current delivery before going offline.');
+      return;
+    }
     final uid = ref.read(authServiceProvider).currentUser?.uid;
     if (uid == null) return;
 
@@ -156,7 +161,10 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            if (online) ...[
+            if (user?.activeJobId != null) ...[
+              const ActiveJobCard(),
+              const SizedBox(height: 16),
+            ] else if (online) ...[
               const NearbyJobsSection(),
               const SizedBox(height: 16),
             ],

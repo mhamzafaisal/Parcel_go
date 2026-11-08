@@ -13,6 +13,7 @@ import '../../../data/services/job_matching.dart';
 import '../../../data/services/location_service.dart';
 import '../../auth/auth_providers.dart';
 import 'job_providers.dart';
+import 'package:go_router/go_router.dart';
 
 class NearbyJobsSection extends ConsumerStatefulWidget {
   const NearbyJobsSection({super.key});
@@ -153,7 +154,7 @@ class _NearbyJobsSectionState extends ConsumerState<NearbyJobsSection> {
                   _JobCard(
                     nearby: n,
                     onTap: () =>
-                        _snack('Accepting parcels comes in Task 17'),
+                        context.push('/rider-job-request', extra: n),
                   ),
                   const SizedBox(height: 12),
                 ],

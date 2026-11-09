@@ -50,4 +50,13 @@ void main() {
     expect(nextActionLabel(ShipmentStatus.pickedUp), 'Start trip');
     expect(nextActionLabel(ShipmentStatus.delivered), isNull);
   });
+
+    test('riders move assigned to picked up to in transit, never further', () {
+    expect(nextRiderStatus(ShipmentStatus.assigned), ShipmentStatus.pickedUp);
+    expect(nextRiderStatus(ShipmentStatus.pickedUp), ShipmentStatus.inTransit);
+    expect(nextRiderStatus(ShipmentStatus.inTransit), isNull);
+    expect(nextRiderStatus(ShipmentStatus.delivered), isNull);
+  });
 }
+
+ 

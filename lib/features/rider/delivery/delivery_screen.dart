@@ -20,6 +20,7 @@ import '../../../data/services/location_service.dart';
 import '../../../data/services/pricing_service.dart';
 import '../../auth/auth_providers.dart';
 import '../home/job_providers.dart';
+import '../../../data/repositories/shipment_repository.dart';
 
 class DeliveryScreen extends ConsumerStatefulWidget {
   const DeliveryScreen({super.key});
@@ -30,6 +31,7 @@ class DeliveryScreen extends ConsumerStatefulWidget {
 
 class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
   bool _updatingLocation = false;
+  bool _advancing = false;
 
   void _snack(String message) {
     ScaffoldMessenger.of(context)
@@ -61,6 +63,72 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
     }
   }
 
+    Future<void> _advance(Shipment s, LatLng? riderPoint) async {
+    if (_advancing) return;
+    final uid = ref.read(authServiceProvider).currentUser?.uid;
+    if (uid == null) return;
+
+    if (s.status == ShipmentStatus.inTransit) {
+      _snack('Delivery code check comes in Task 20');
+      return;
+    }
+    final next = nextRiderStatus(s.status);
+    if (next == null) return;
+
+    String title;
+    String message;
+    if (next == ShipmentStatus.pickedUp) {
+      title = 'Picked up the parcel?';
+      message = 'Confirm only after you have collected the parcel from the sender.';
+      final pickup = s.pickupPoint;
+      if (riderPoint != null && pickup != null) {
+        final km =
+            const Distance().as(LengthUnit.Kilometer, riderPoint, pickup);
+        if (km > 0.5) {
+          message =
+              'Your last known location is ${km.toStringAsFixed(1)} km from the pickup point. $message';
+        }
+      }
+    } else {
+      title = 'Start the trip?';
+      message = 'The customer will see that the parcel is on the way.';
+    }
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Not yet'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    setState(() => _advancing = true);
+    try {
+      await ref
+          .read(shipmentRepositoryProvider)
+          .advanceStatus(shipmentId: s.id, riderId: uid, to: next)
+          .timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      if (mounted) _snack('Taking too long. Check your internet.');
+    } catch (e) {
+      debugPrint('Status update failed: $e');
+      if (mounted) _snack('Could not update the status. Please try again.');
+    } finally {
+      if (mounted) setState(() => _advancing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final shipment = ref.watch(activeShipmentProvider);
@@ -86,8 +154,8 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
             rider: riderPoint,
             updatingLocation: _updatingLocation,
             onUpdateLocation: _updateLocation,
-            onAction: () =>
-                _snack('Status updates come in Task 19'),
+            onAction: () => _advance(s, riderPoint),
+            actionBusy: _advancing,
           );
         },
       ),
@@ -103,6 +171,7 @@ class _Body extends StatelessWidget {
   final bool updatingLocation;
   final VoidCallback onUpdateLocation;
   final VoidCallback onAction;
+  final bool actionBusy;
 
   const _Body({
     required this.shipment,
@@ -112,6 +181,7 @@ class _Body extends StatelessWidget {
     required this.updatingLocation,
     required this.onUpdateLocation,
     required this.onAction,
+    required this.actionBusy,
   });
 
   @override
@@ -349,7 +419,11 @@ class _Body extends StatelessWidget {
               ),
               if (actionLabel != null) ...[
                 const SizedBox(height: 20),
-                PrimaryButton(label: actionLabel, onPressed: onAction),
+                PrimaryButton(
+                  label: actionLabel,
+                  isLoading: actionBusy,
+                  onPressed: onAction,
+                ),
               ],
             ],
           ),

@@ -40,6 +40,12 @@ service cloud.firestore {
       return s.riderId == request.auth.uid && s.status == 'assigned';
     }
 
+    // Isi commit ke baad shipment ka rider wohi ho aur status yehi ho
+    function riderMovedAfter(shipmentId, status) {
+      let s = getAfter(/databases/$(database)/documents/shipments/$(shipmentId)).data;
+      return s.riderId == request.auth.uid && s.status == status;
+    }
+
     // Isi commit ke baad job is rider ke naam "taken" hoga
     function jobTakenBy(jobId, uid) {
       let j = getAfter(/databases/$(database)/documents/jobs/$(jobId)).data;
@@ -142,6 +148,26 @@ service cloud.firestore {
         && request.resource.data.assignedAt == request.time
         && jobTakenBy(shipmentId, request.auth.uid);
 
+      // Rider status aage badhata hai: assigned -> picked_up -> in_transit
+      // Har badlav ke saath uska event bhi isi batch mein likha jana zaroori hai
+      allow update: if signedIn()
+        && resource.data.riderId == request.auth.uid
+        && (
+          (resource.data.status == 'assigned'
+            && request.resource.data.status == 'picked_up'
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['status', 'pickedUpAt'])
+            && request.resource.data.pickedUpAt == request.time
+            && existsAfter(/databases/$(database)/documents/shipments/$(shipmentId)/events/picked_up))
+          ||
+          (resource.data.status == 'picked_up'
+            && request.resource.data.status == 'in_transit'
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['status', 'inTransitAt'])
+            && request.resource.data.inTransitAt == request.time
+            && existsAfter(/databases/$(database)/documents/shipments/$(shipmentId)/events/in_transit))
+        );
+
       allow delete: if false;
 
       match /events/{eventId} {
@@ -160,6 +186,15 @@ service cloud.firestore {
           && request.resource.data.by == request.auth.uid
           && request.resource.data.at == request.time
           && riderAssignedAfter(shipmentId);
+
+        // Rider ka picked_up / in_transit event (document ID = status)
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(['status', 'at', 'by'])
+          && request.resource.data.status in ['picked_up', 'in_transit']
+          && eventId == request.resource.data.status
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.at == request.time
+          && riderMovedAfter(shipmentId, request.resource.data.status);
 
         allow update, delete: if false;
       }

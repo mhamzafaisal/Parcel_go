@@ -40,12 +40,14 @@ class ShipmentRepository {
     if (snap.docs.isEmpty) return null;
     return Shipment.fromDoc(snap.docs.first);
   }
+
   Stream<Shipment?> watchShipment(String id) {
     return _col
         .doc(id)
         .snapshots()
         .map((doc) => doc.exists ? Shipment.fromDoc(doc) : null);
   }
+
   /// Shipment, job, pehla event, OTP aur (agar ho) photo ek hi batch mein
   /// save hote hain: ya sab ho jata hai, ya kuch bhi nahi.
   Future<BookingResult> createShipment({
@@ -143,5 +145,37 @@ class ShipmentRepository {
       }
     }
     throw lastError!;
+  }
+
+  /// Rider ka status badalna: shipment aur uska event ek hi batch mein.
+  /// Event ka document ID wahi status hai, taake ek event do baar na bane.
+  Future<void> advanceStatus({
+    required String shipmentId,
+    required String riderId,
+    required ShipmentStatus to,
+  }) {
+    final String stampField;
+    switch (to) {
+      case ShipmentStatus.pickedUp:
+        stampField = 'pickedUpAt';
+      case ShipmentStatus.inTransit:
+        stampField = 'inTransitAt';
+      default:
+        throw ArgumentError(
+            'Riders can only move a parcel to picked up or in transit.');
+    }
+
+    final ref = _col.doc(shipmentId);
+    final batch = _db.batch();
+    batch.update(ref, {
+      'status': to.value,
+      stampField: FieldValue.serverTimestamp(),
+    });
+    batch.set(ref.collection('events').doc(to.value), {
+      'status': to.value,
+      'at': FieldValue.serverTimestamp(),
+      'by': riderId,
+    });
+    return batch.commit();
   }
 }

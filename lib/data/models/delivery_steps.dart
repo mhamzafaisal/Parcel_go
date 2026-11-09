@@ -76,3 +76,15 @@ String? nextActionLabel(ShipmentStatus status) {
       return null;
   }
 }
+
+/// Rider ka agla status. Delivered yahan nahi: wo delivery code ke saath hoga.
+ShipmentStatus? nextRiderStatus(ShipmentStatus status) {
+  switch (status) {
+    case ShipmentStatus.assigned:
+      return ShipmentStatus.pickedUp;
+    case ShipmentStatus.pickedUp:
+      return ShipmentStatus.inTransit;
+    default:
+      return null;
+  }
+}

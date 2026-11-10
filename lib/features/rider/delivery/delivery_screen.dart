@@ -69,7 +69,7 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
     if (uid == null) return;
 
     if (s.status == ShipmentStatus.inTransit) {
-      _snack('Delivery code check comes in Task 20');
+      context.push('/rider-handover');
       return;
     }
     final next = nextRiderStatus(s.status);

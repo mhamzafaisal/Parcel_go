@@ -34,7 +34,7 @@ service cloud.firestore {
       return getAfter(/databases/$(database)/documents/shipments/$(shipmentId)).data.customerId == request.auth.uid;
     }
 
-    // Isi commit ke baad is shipment ka rider wohi hoga
+    // Isi commit ke baad is shipment ka rider wohi hoga aur status assigned
     function riderAssignedAfter(shipmentId) {
       let s = getAfter(/databases/$(database)/documents/shipments/$(shipmentId)).data;
       return s.riderId == request.auth.uid && s.status == 'assigned';
@@ -91,9 +91,14 @@ service cloud.firestore {
             || (request.resource.data.location.lat is number
                 && request.resource.data.location.lng is number))
         && (!('activeJobId' in request.resource.data.diff(resource.data).affectedKeys())
+            // Accept: khali se job ke naam
             || (resource.data.get('activeJobId', null) == null
-                && request.resource.data.activeJobId is string
-                && jobTakenBy(request.resource.data.activeJobId, uid)));
+                && request.resource.data.get('activeJobId', null) is string
+                && jobTakenBy(request.resource.data.activeJobId, uid))
+            // Delivery mukammal: job se khali
+            || (resource.data.get('activeJobId', null) is string
+                && request.resource.data.get('activeJobId', null) == null
+                && riderMovedAfter(resource.data.activeJobId, 'delivered')));
 
       allow delete: if false;
     }
@@ -168,6 +173,17 @@ service cloud.firestore {
             && existsAfter(/databases/$(database)/documents/shipments/$(shipmentId)/events/in_transit))
         );
 
+      // Delivery: in_transit se delivered. Delivered event mein sahi code hona
+      // zaroori hai (wo event ki rule check karti hai).
+      allow update: if signedIn()
+        && resource.data.riderId == request.auth.uid
+        && resource.data.status == 'in_transit'
+        && request.resource.data.status == 'delivered'
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'deliveredAt'])
+        && request.resource.data.deliveredAt == request.time
+        && existsAfter(/databases/$(database)/documents/shipments/$(shipmentId)/events/delivered);
+
       allow delete: if false;
 
       match /events/{eventId} {
@@ -196,12 +212,24 @@ service cloud.firestore {
           && request.resource.data.at == request.time
           && riderMovedAfter(shipmentId, request.resource.data.status);
 
+        // Delivered event: code secret/otp se milna chahiye
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(['status', 'at', 'by', 'code'])
+          && request.resource.data.status == 'delivered'
+          && eventId == 'delivered'
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.at == request.time
+          && request.resource.data.code is string
+          && request.resource.data.code == get(/databases/$(database)/documents/shipments/$(shipmentId)/secret/otp).data.code
+          && riderMovedAfter(shipmentId, 'delivered');
+
         allow update, delete: if false;
       }
 
       match /photos/{photoId} {
         allow read: if signedIn() && canViewShipment(shipmentId);
 
+        // Customer ki parcel photo
         allow create: if signedIn()
           && willOwnShipment(shipmentId)
           && photoId == 'main'
@@ -209,6 +237,15 @@ service cloud.firestore {
           && request.resource.data.data is bytes
           && request.resource.data.data.size() <= 307200
           && request.resource.data.createdAt == request.time;
+
+        // Rider ki delivery ki proof photo
+        allow create: if signedIn()
+          && photoId == 'proof'
+          && request.resource.data.keys().hasOnly(['data', 'createdAt'])
+          && request.resource.data.data is bytes
+          && request.resource.data.data.size() <= 307200
+          && request.resource.data.createdAt == request.time
+          && riderMovedAfter(shipmentId, 'delivered');
 
         allow update, delete: if false;
       }
@@ -263,6 +300,21 @@ service cloud.firestore {
         && riderIsFree();
 
       allow delete: if false;
+    }
+
+    // Rider ki kamayi: delivery ke saath, raqam job ki riderEarning ke barabar
+    match /earnings/{jobId} {
+      allow read: if signedIn() && resource.data.riderId == request.auth.uid;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['riderId', 'jobId', 'amount', 'deliveredAt'])
+        && request.resource.data.riderId == request.auth.uid
+        && request.resource.data.jobId == jobId
+        && request.resource.data.amount == get(/databases/$(database)/documents/jobs/$(jobId)).data.riderEarning
+        && request.resource.data.deliveredAt == request.time
+        && riderMovedAfter(jobId, 'delivered');
+
+      allow update, delete: if false;
     }
   }
 }

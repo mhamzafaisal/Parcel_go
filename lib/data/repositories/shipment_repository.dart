@@ -178,4 +178,51 @@ class ShipmentRepository {
     });
     return batch.commit();
   }
+
+    /// Delivery mukammal: shipment, delivered event (code ke saath), proof photo,
+  /// kamayi aur rider ka activeJobId saaf. Sab ek batch mein.
+  /// Galat code par rules poori batch rok deti hain (permission-denied).
+  /// Kamayi ki raqam wapas karta hai.
+  Future<int> completeDelivery({
+    required String shipmentId,
+    required String riderId,
+    required String code,
+    Uint8List? proofPhoto,
+  }) async {
+    final jobSnap = await _db.collection('jobs').doc(shipmentId).get();
+    final earning = (jobSnap.data()?['riderEarning'] as num?)?.toInt();
+    if (earning == null) throw StateError('Job not found');
+
+    final ref = _col.doc(shipmentId);
+    final batch = _db.batch();
+
+    batch.update(ref, {
+      'status': ShipmentStatus.delivered.value,
+      'deliveredAt': FieldValue.serverTimestamp(),
+    });
+    batch.set(ref.collection('events').doc('delivered'), {
+      'status': ShipmentStatus.delivered.value,
+      'at': FieldValue.serverTimestamp(),
+      'by': riderId,
+      'code': code,
+    });
+    if (proofPhoto != null) {
+      batch.set(ref.collection('photos').doc('proof'), {
+        'data': Blob(proofPhoto),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+    batch.set(_db.collection('earnings').doc(shipmentId), {
+      'riderId': riderId,
+      'jobId': shipmentId,
+      'amount': earning,
+      'deliveredAt': FieldValue.serverTimestamp(),
+    });
+    batch.update(_db.collection('users').doc(riderId), {
+      'activeJobId': FieldValue.delete(),
+    });
+
+    await batch.commit();
+    return earning;
+  }
 }

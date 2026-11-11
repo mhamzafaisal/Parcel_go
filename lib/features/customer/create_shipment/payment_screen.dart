@@ -61,6 +61,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       if (!mounted) return;
 
       final confirmation = BookingConfirmation(
+        shipmentId: result.trackingId,
         trackingId: result.trackingId,
         otp: result.otp,
         total: price.total,

@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/theme.dart';
+import '../../features/rider/tracking/rider_tracker.dart';
 
-class RiderShell extends StatelessWidget {
+class RiderShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const RiderShell({super.key, required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Active parcel ho to location bhejna shuru, khatam to band
+    ref.watch(riderTrackerProvider);
+
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(

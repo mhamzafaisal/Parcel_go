@@ -21,6 +21,7 @@ import '../../../data/services/pricing_service.dart';
 import '../../auth/auth_providers.dart';
 import '../home/job_providers.dart';
 import '../../../data/repositories/shipment_repository.dart';
+import '../../../data/repositories/live_location_repository.dart';
 
 class DeliveryScreen extends ConsumerStatefulWidget {
   const DeliveryScreen({super.key});
@@ -51,6 +52,13 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
           .setRiderStatus(uid,
               online: true, lat: pos.latitude, lng: pos.longitude)
           .timeout(const Duration(seconds: 15));
+
+      final shipmentId = ref.read(activeShipmentProvider).value?.id;
+      if (shipmentId != null) {
+        await ref
+            .read(liveLocationRepositoryProvider)
+            .publish(shipmentId, lat: pos.latitude, lng: pos.longitude);
+      }
     } on LocationException catch (e) {
       if (mounted) _snack(e.message);
     } on TimeoutException {
@@ -63,7 +71,7 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
     }
   }
 
-    Future<void> _advance(Shipment s, LatLng? riderPoint) async {
+  Future<void> _advance(Shipment s, LatLng? riderPoint) async {
     if (_advancing) return;
     final uid = ref.read(authServiceProvider).currentUser?.uid;
     if (uid == null) return;
@@ -285,6 +293,28 @@ class _Body extends StatelessWidget {
                           width: 18,
                           child: CircularProgressIndicator(strokeWidth: 2.5))
                       : const Icon(Icons.my_location),
+                ),
+              ),
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.circle, size: 10, color: AppColors.green),
+                      SizedBox(width: 6),
+                      Text('Sharing live location',
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
                 ),
               ),
             ],

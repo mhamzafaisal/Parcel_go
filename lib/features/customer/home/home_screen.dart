@@ -12,36 +12,36 @@ import '../../../data/services/auth_service.dart';
 import '../../auth/auth_providers.dart';
 import 'home_providers.dart';
 import '../create_shipment/shipment_draft.dart';
- 
+
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
- 
+
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
- 
+
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _trackController = TextEditingController();
   bool _tracking = false;
- 
+
   String _greeting() {
     final h = DateTime.now().hour;
     if (h < 12) return 'Good morning';
     if (h < 17) return 'Good afternoon';
     return 'Good evening';
   }
- 
+
   void _snack(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
   }
- 
+
   void _openCreateShipment() {
     ref.read(shipmentDraftProvider.notifier).reset();
     context.push('/create-shipment');
   }
- 
+
   Future<void> _track() async {
     final id = _trackController.text.trim().toUpperCase();
     if (id.isEmpty) {
@@ -50,7 +50,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     final uid = ref.read(authServiceProvider).currentUser?.uid;
     if (uid == null) return;
- 
+
     setState(() => _tracking = true);
     try {
       final s = await ref.read(shipmentRepositoryProvider).findByTrackingId(uid, id);
@@ -58,7 +58,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (s == null) {
         _snack('No shipment found with this ID');
       } else {
-        _snack('${s.trackingId}: ${s.status.label} (tracking screen comes in Task 22)');
+        context.push('/track/${s.id}');
       }
     } catch (_) {
       if (!mounted) return;
@@ -67,21 +67,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (mounted) setState(() => _tracking = false);
     }
   }
- 
 
- 
   @override
   void dispose() {
     _trackController.dispose();
     super.dispose();
   }
- 
+
   @override
   Widget build(BuildContext context) {
     final name = ref.watch(appUserProvider).value?.name ?? '';
     final firstName = name.split(' ').first;
     final shipments = ref.watch(myShipmentsProvider);
- 
+
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -114,7 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
             const SizedBox(height: 20),
- 
+
             // Send card
             Container(
               padding: const EdgeInsets.all(20),
@@ -156,7 +154,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             const SizedBox(height: 20),
- 
+
             // Track box
             AppCard(
               child: Column(
@@ -182,7 +180,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             const SizedBox(height: 24),
- 
+
             // Recent shipments
             Row(
               children: [
@@ -231,7 +229,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               },
             ),
- 
+
             if (kDebugMode) ...[
               const SizedBox(height: 8),
               Center(
@@ -248,15 +246,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 }
- 
+
 class _ShipmentCard extends StatelessWidget {
   final Shipment shipment;
   const _ShipmentCard({required this.shipment});
- 
+
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      onTap: () {},
+      onTap: () => context.push('/track/${shipment.id}'),
       child: Row(
         children: [
           Container(

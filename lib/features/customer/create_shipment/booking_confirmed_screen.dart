@@ -8,6 +8,7 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/parcel_options.dart';
 
 class BookingConfirmation {
+  final String shipmentId;
   final String trackingId;
   final String otp;
   final int total;
@@ -15,6 +16,7 @@ class BookingConfirmation {
   final PaymentPayer payer;
 
   const BookingConfirmation({
+    required this.shipmentId,
     required this.trackingId,
     required this.otp,
     required this.total,
@@ -165,8 +167,7 @@ class BookingConfirmedScreen extends StatelessWidget {
             PrimaryButton(
               label: 'Track parcel',
               icon: Icons.location_searching,
-              onPressed: () =>
-                  _snack(context, 'Tracking screen comes in Task 22'),
+              onPressed: () => context.push('/track/${data.shipmentId}'),
             ),
             const SizedBox(height: 12),
             SizedBox(

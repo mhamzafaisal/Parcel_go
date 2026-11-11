@@ -46,6 +46,13 @@ service cloud.firestore {
       return s.riderId == request.auth.uid && s.status == status;
     }
 
+    // Assigned rider, aur parcel abhi raste mein (delivered ya cancelled nahi)
+    function isTrackingRiderOf(shipmentId) {
+      let s = get(/databases/$(database)/documents/shipments/$(shipmentId)).data;
+      return s.riderId == request.auth.uid
+        && s.status in ['assigned', 'picked_up', 'in_transit'];
+    }
+
     // Isi commit ke baad job is rider ke naam "taken" hoga
     function jobTakenBy(jobId, uid) {
       let j = getAfter(/databases/$(database)/documents/jobs/$(jobId)).data;
@@ -262,6 +269,25 @@ service cloud.firestore {
           && request.resource.data.code.size() == 6;
 
         allow update, delete: if false;
+      }
+
+      // Rider ki live location: customer aur rider padhein, sirf rider likhe
+      match /live/{docId} {
+        allow read: if signedIn() && canViewShipment(shipmentId);
+
+        allow create, update: if signedIn()
+          && docId == 'rider'
+          && request.resource.data.keys().hasOnly(['lat', 'lng', 'at'])
+          && request.resource.data.lat is number
+          && request.resource.data.lat >= -90
+          && request.resource.data.lat <= 90
+          && request.resource.data.lng is number
+          && request.resource.data.lng >= -180
+          && request.resource.data.lng <= 180
+          && request.resource.data.at == request.time
+          && isTrackingRiderOf(shipmentId);
+
+        allow delete: if false;
       }
     }
 

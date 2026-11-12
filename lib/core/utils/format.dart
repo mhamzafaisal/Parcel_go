@@ -21,3 +21,6 @@ String timeAgo(DateTime t, DateTime now) {
   if (m < 60) return '$m min ago';
   return '${m ~/ 60} h ago';
 }
+
+/// Jaise "8 Nov, 3:30 PM"
+String formatDateTime(DateTime t) => DateFormat('d MMM, h:mm a').format(t);

@@ -6,6 +6,7 @@ import '../models/parcel_options.dart';
 import '../models/place_result.dart';
 import '../models/shipment.dart';
 import '../services/pricing_service.dart';
+import '../models/shipment_event.dart';
 
 final shipmentRepositoryProvider =
     Provider<ShipmentRepository>((ref) => ShipmentRepository());
@@ -46,6 +47,32 @@ class ShipmentRepository {
         .doc(id)
         .snapshots()
         .map((doc) => doc.exists ? Shipment.fromDoc(doc) : null);
+  }
+    /// Timeline ke events, purane pehle
+  Stream<List<ShipmentEvent>> watchEvents(String id) {
+    return _col
+        .doc(id)
+        .collection('events')
+        .orderBy('at')
+        .snapshots()
+        .map((snap) => snap.docs.map(ShipmentEvent.fromDoc).toList());
+  }
+
+  /// Delivery code (sirf customer padh sakta hai)
+  Stream<String?> watchOtp(String id) {
+    return _col
+        .doc(id)
+        .collection('secret')
+        .doc('otp')
+        .snapshots()
+        .map((doc) => doc.data()?['code'] as String?);
+  }
+
+  /// photoId: 'main' (parcel ki photo) ya 'proof' (delivery ka saboot)
+  Future<Uint8List?> getPhoto(String id, String photoId) async {
+    final doc = await _col.doc(id).collection('photos').doc(photoId).get();
+    final data = doc.data()?['data'];
+    return data is Blob ? data.bytes : null;
   }
 
   /// Shipment, job, pehla event, OTP aur (agar ho) photo ek hi batch mein

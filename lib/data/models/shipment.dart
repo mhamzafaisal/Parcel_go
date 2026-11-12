@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:latlong2/latlong.dart';
+import '../services/pricing_service.dart';
 import 'parcel_options.dart';
 
 enum ShipmentStatus {
@@ -34,6 +35,13 @@ class Shipment {
   final LatLng? pickupPoint;
   final LatLng? dropPoint;
   final PaymentPayer? payer;
+  final ParcelCategory category;
+  final ParcelSize size;
+  final double weightKg;
+  final bool fragile;
+  final DeliverySpeed speed;
+  final bool hasPhoto;
+  final List<PriceLine> priceLines;
 
   const Shipment({
     required this.id,
@@ -51,6 +59,13 @@ class Shipment {
     this.pickupPoint,
     this.dropPoint,
     this.payer,
+    this.category = ParcelCategory.other,
+    this.size = ParcelSize.small,
+    this.weightKg = 0,
+    this.fragile = false,
+    this.speed = DeliverySpeed.standard,
+    this.hasPhoto = false,
+    this.priceLines = const [],
   });
 
   static LatLng? _point(Map<String, dynamic> m) {
@@ -65,6 +80,18 @@ class Shipment {
       if (p.value == v) return p;
     }
     return null;
+  }
+
+  static List<PriceLine> _lines(dynamic v) {
+    if (v is! List) return const [];
+    return [
+      for (final e in v)
+        if (e is Map)
+          PriceLine(
+            e['label'] as String? ?? '',
+            (e['amount'] as num?)?.toInt() ?? 0,
+          ),
+    ];
   }
 
   factory Shipment.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -89,6 +116,17 @@ class Shipment {
       pickupPoint: _point(pickup),
       dropPoint: _point(drop),
       payer: _payer(d['payer'] as String?),
+      category: ParcelCategory.values.firstWhere(
+          (c) => c.value == d['category'],
+          orElse: () => ParcelCategory.other),
+      size: ParcelSize.values.firstWhere((s) => s.value == d['size'],
+          orElse: () => ParcelSize.small),
+      weightKg: (d['weightKg'] as num?)?.toDouble() ?? 0,
+      fragile: d['fragile'] as bool? ?? false,
+      speed: DeliverySpeed.values.firstWhere((s) => s.value == d['speed'],
+          orElse: () => DeliverySpeed.standard),
+      hasPhoto: d['hasPhoto'] as bool? ?? false,
+      priceLines: _lines(d['priceLines']),
     );
   }
 }

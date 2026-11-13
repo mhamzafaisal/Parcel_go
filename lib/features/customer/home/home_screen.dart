@@ -5,8 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../../../core/widgets/status_chip.dart';
-import '../../../data/models/shipment.dart';
+import '../../../core/widgets/shipment_card.dart';
 import '../../../data/repositories/shipment_repository.dart';
 import '../../../data/services/auth_service.dart';
 import '../../auth/auth_providers.dart';
@@ -222,7 +221,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 return Column(
                   children: [
                     for (final s in list.take(5)) ...[
-                      _ShipmentCard(shipment: s),
+                      ShipmentCard(shipment: s),
                       const SizedBox(height: 12),
                     ],
                   ],
@@ -242,59 +241,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _ShipmentCard extends StatelessWidget {
-  final Shipment shipment;
-  const _ShipmentCard({required this.shipment});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      onTap: () => context.push('/track/${shipment.id}'),
-      child: Row(
-        children: [
-          Container(
-            height: 44,
-            width: 44,
-            decoration: BoxDecoration(
-              color: const Color(0x1F3F5B2E),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(Icons.inventory_2_outlined,
-                color: AppColors.green),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(shipment.trackingId,
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 2),
-                Text(
-                  '${shipment.pickupAddress} \u2192 ${shipment.dropAddress}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              StatusChip(status: shipment.status),
-              const SizedBox(height: 6),
-              Text('Rs ${shipment.price.toStringAsFixed(0)}',
-                  style: Theme.of(context).textTheme.titleMedium),
-            ],
-          ),
-        ],
       ),
     );
   }

@@ -24,3 +24,13 @@ String timeAgo(DateTime t, DateTime now) {
 
 /// Jaise "8 Nov, 3:30 PM"
 String formatDateTime(DateTime t) => DateFormat('d MMM, h:mm a').format(t);
+
+/// List ke group ka naam: "Today", "Yesterday", ya "5 Nov 2026"
+String dateGroupLabel(DateTime t, DateTime now) {
+  final today = DateTime.utc(now.year, now.month, now.day);
+  final day = DateTime.utc(t.year, t.month, t.day);
+  final diff = today.difference(day).inDays;
+  if (diff == 0) return 'Today';
+  if (diff == 1) return 'Yesterday';
+  return DateFormat('d MMM yyyy').format(t);
+}

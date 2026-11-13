@@ -53,6 +53,28 @@ service cloud.firestore {
         && s.status in ['assigned', 'picked_up', 'in_transit'];
     }
 
+    // Rating: shipment delivered ho, isi customer ki, isi rider ki
+    function ratingAllowed(shipmentId, rating) {
+      let s = get(/databases/$(database)/documents/shipments/$(shipmentId)).data;
+      return s.customerId == request.auth.uid
+        && s.status == 'delivered'
+        && s.riderId == rating.riderId;
+    }
+
+    // Rider ke hisaab mein jo rating jud rahi hai: nayi ho, isi batch mein
+    // bane, isi customer ki ho aur isi rider ki ho
+    function newRatingFor(ratingId, riderId) {
+      let r = getAfter(/databases/$(database)/documents/ratings/$(ratingId)).data;
+      return !exists(/databases/$(database)/documents/ratings/$(ratingId))
+        && existsAfter(/databases/$(database)/documents/ratings/$(ratingId))
+        && r.riderId == riderId
+        && r.customerId == request.auth.uid;
+    }
+
+    function starsOf(ratingId) {
+      return getAfter(/databases/$(database)/documents/ratings/$(ratingId)).data.stars;
+    }
+
     // Isi commit ke baad job is rider ke naam "taken" hoga
     function jobTakenBy(jobId, uid) {
       let j = getAfter(/databases/$(database)/documents/jobs/$(jobId)).data;
@@ -341,6 +363,52 @@ service cloud.firestore {
         && riderMovedAfter(jobId, 'delivered');
 
       allow update, delete: if false;
+    }
+
+    // Customer ki rating: har shipment ki ek, aur rider ka hisaab usi batch mein
+    match /ratings/{shipmentId} {
+      // resource == null: abhi rating nahi di, to "maujood nahi" wapas aaye
+      allow read: if signedIn()
+        && (resource == null
+            || resource.data.customerId == request.auth.uid
+            || resource.data.riderId == request.auth.uid);
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(
+             ['shipmentId', 'riderId', 'customerId', 'stars', 'comment', 'createdAt'])
+        && request.resource.data.shipmentId == shipmentId
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.stars is int
+        && request.resource.data.stars >= 1
+        && request.resource.data.stars <= 5
+        && request.resource.data.comment is string
+        && request.resource.data.comment.size() <= 200
+        && request.resource.data.createdAt == request.time
+        && ratingAllowed(shipmentId, request.resource.data)
+        && getAfter(/databases/$(database)/documents/riderStats/$(request.resource.data.riderId)).data.lastRatingId == shipmentId;
+
+      allow update, delete: if false;
+    }
+
+    // Rider ka jama-shuda hisaab: sirf +1 aur +stars, aur sirf nayi rating ke saath
+    match /riderStats/{riderId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['ratingSum', 'ratingCount', 'lastRatingId'])
+        && request.resource.data.lastRatingId is string
+        && newRatingFor(request.resource.data.lastRatingId, riderId)
+        && request.resource.data.ratingCount == 1
+        && request.resource.data.ratingSum == starsOf(request.resource.data.lastRatingId);
+
+      allow update: if signedIn()
+        && request.resource.data.keys().hasOnly(['ratingSum', 'ratingCount', 'lastRatingId'])
+        && request.resource.data.lastRatingId is string
+        && newRatingFor(request.resource.data.lastRatingId, riderId)
+        && request.resource.data.ratingCount == resource.data.ratingCount + 1
+        && request.resource.data.ratingSum == resource.data.ratingSum + starsOf(request.resource.data.lastRatingId);
+
+      allow delete: if false;
     }
   }
 }

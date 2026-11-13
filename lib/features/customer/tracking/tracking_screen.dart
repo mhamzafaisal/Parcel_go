@@ -18,6 +18,8 @@ import '../../../data/repositories/live_location_repository.dart';
 import '../../../data/services/pricing_service.dart';
 import '../../../data/services/tracking_policy.dart';
 import 'tracking_providers.dart';
+import 'rating_card.dart';
+import 'rating_providers.dart';
 
 class TrackingScreen extends ConsumerStatefulWidget {
   final String shipmentId;
@@ -80,6 +82,17 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget RatingCard({required String shipmentId, required dynamic rating}) {
+    return AppCard(
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.star_outline, color: AppColors.green),
+        title: const Text('Rate your delivery'),
+        subtitle: Text('Shipment $shipmentId'),
       ),
     );
   }
@@ -266,6 +279,13 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 now: now,
               ),
               const SizedBox(height: 14),
+              if (s.status == ShipmentStatus.delivered && s.riderId != null) ...[
+                RatingCard(
+                  shipmentId: s.id,
+                  rating: ref.watch(ratingProvider(s.id)),
+                ),
+                const SizedBox(height: 14),
+              ],
 
               // Addresses
               AppCard(

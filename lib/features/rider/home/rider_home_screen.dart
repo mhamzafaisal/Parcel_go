@@ -12,6 +12,7 @@ import '../../auth/auth_providers.dart';
 import 'rider_providers.dart';
 import 'nearby_jobs_section.dart';
 import 'active_job_card.dart';
+import '../../../data/models/rating.dart';
 
 class RiderHomeScreen extends ConsumerStatefulWidget {
   const RiderHomeScreen({super.key});
@@ -78,7 +79,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
     final earnings =
         ref.watch(todayEarningsProvider).value ?? EarningsSummary.zero;
     final firstName = (user?.name ?? '').split(' ').first;
-    final rating = user?.rating ?? 0;
+    final stats = ref.watch(riderStatsProvider).value ?? RiderStats.empty;
 
     return Scaffold(
       body: SafeArea(
@@ -199,9 +200,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
                         child: _Stat(
                           icon: Icons.star_outline,
                           label: 'Rating',
-                          value: rating == 0
-                              ? 'New'
-                              : rating.toStringAsFixed(1),
+                          value: ratingLabel(stats)
                         ),
                       ),
                     ],

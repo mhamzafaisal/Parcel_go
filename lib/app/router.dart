@@ -29,6 +29,7 @@ import '../features/rider/jobs/job_request_screen.dart';
 import '../features/rider/delivery/delivery_screen.dart';
 import '../features/rider/delivery/handover_screen.dart';
 import '../features/customer/tracking/tracking_screen.dart';
+import '../features/customer/tracking/rating_screen.dart';
 /// Login ya profile badalte hi router ko dobara check karwata hai
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
@@ -92,7 +93,7 @@ String? _redirect(Ref ref, String loc) {
     return home;
   }
   if (profile.role == UserRole.rider &&
-      (_customerOnlyRoutes.contains(loc) || loc.startsWith('/track/'))) {
+      (_customerOnlyRoutes.contains(loc) || loc.startsWith('/track/') || loc.startsWith('/rate/'))) {
     return home;
   }
   return null;
@@ -178,6 +179,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/track/:id',
         builder: (context, state) =>
             TrackingScreen(shipmentId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/rate/:id',
+        builder: (context, state) =>
+            RatingScreen(shipmentId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/create-shipment',

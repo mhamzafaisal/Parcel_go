@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/earning_entry.dart';
 import '../../../data/repositories/earnings_repository.dart';
 import '../../auth/auth_providers.dart';
+import '../../../data/models/rating.dart';
+import '../../../data/repositories/rating_repository.dart';
 
 class EarningsSummary {
   final int amount;
@@ -35,4 +37,16 @@ final todayEarningsProvider = Provider<AsyncValue<EarningsSummary>>((ref) {
   return ref
       .watch(riderEarningsProvider)
       .whenData((entries) => summarizeToday(entries, DateTime.now()));
+});
+
+final riderStatsProvider = StreamProvider<RiderStats>((ref) {
+  final uid = ref.watch(authStateProvider.select((a) => a.value?.uid));
+  if (uid == null) return Stream.value(RiderStats.empty);
+  return ref.watch(ratingRepositoryProvider).watchRiderStats(uid);
+});
+
+final riderReviewsProvider = StreamProvider<List<Rating>>((ref) {
+  final uid = ref.watch(authStateProvider.select((a) => a.value?.uid));
+  if (uid == null) return Stream.value(const <Rating>[]);
+  return ref.watch(ratingRepositoryProvider).watchRiderRatings(uid);
 });

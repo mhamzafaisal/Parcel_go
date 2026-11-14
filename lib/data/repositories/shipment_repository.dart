@@ -7,6 +7,7 @@ import '../models/place_result.dart';
 import '../models/shipment.dart';
 import '../services/pricing_service.dart';
 import '../models/shipment_event.dart';
+import '../models/app_notification.dart';
 
 final shipmentRepositoryProvider =
     Provider<ShipmentRepository>((ref) => ShipmentRepository());
@@ -48,7 +49,8 @@ class ShipmentRepository {
         .snapshots()
         .map((doc) => doc.exists ? Shipment.fromDoc(doc) : null);
   }
-    /// Timeline ke events, purane pehle
+
+  /// Timeline ke events, purane pehle
   Stream<List<ShipmentEvent>> watchEvents(String id) {
     return _col
         .doc(id)
@@ -174,11 +176,13 @@ class ShipmentRepository {
     throw lastError!;
   }
 
-  /// Rider ka status badalna: shipment aur uska event ek hi batch mein.
+  /// Rider ka status badalna: shipment, uska event aur customer ki
+  /// notification ek hi batch mein.
   /// Event ka document ID wahi status hai, taake ek event do baar na bane.
   Future<void> advanceStatus({
     required String shipmentId,
     required String riderId,
+    required String customerId,
     required ShipmentStatus to,
   }) {
     final String stampField;
@@ -203,16 +207,28 @@ class ShipmentRepository {
       'at': FieldValue.serverTimestamp(),
       'by': riderId,
     });
+    batch.set(
+      _db
+          .collection('notifications')
+          .doc(statusNotificationId(shipmentId, to)),
+      statusNotificationData(
+        userId: customerId,
+        shipmentId: shipmentId,
+        status: to,
+      ),
+    );
     return batch.commit();
   }
 
-    /// Delivery mukammal: shipment, delivered event (code ke saath), proof photo,
-  /// kamayi aur rider ka activeJobId saaf. Sab ek batch mein.
+  /// Delivery mukammal: shipment, delivered event (code ke saath), proof photo,
+  /// kamayi, customer ki notification aur rider ka activeJobId saaf.
+  /// Sab ek batch mein.
   /// Galat code par rules poori batch rok deti hain (permission-denied).
   /// Kamayi ki raqam wapas karta hai.
   Future<int> completeDelivery({
     required String shipmentId,
     required String riderId,
+    required String customerId,
     required String code,
     Uint8List? proofPhoto,
   }) async {
@@ -233,6 +249,16 @@ class ShipmentRepository {
       'by': riderId,
       'code': code,
     });
+    batch.set(
+      _db
+          .collection('notifications')
+          .doc(statusNotificationId(shipmentId, ShipmentStatus.delivered)),
+      statusNotificationData(
+        userId: customerId,
+        shipmentId: shipmentId,
+        status: ShipmentStatus.delivered,
+      ),
+    );
     if (proofPhoto != null) {
       batch.set(ref.collection('photos').doc('proof'), {
         'data': Blob(proofPhoto),

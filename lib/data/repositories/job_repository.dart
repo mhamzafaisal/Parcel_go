@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/job.dart';
+import '../models/app_notification.dart';
+import '../models/shipment.dart';
 
 final jobRepositoryProvider = Provider<JobRepository>((ref) => JobRepository());
 
@@ -75,6 +77,16 @@ class JobRepository {
         'at': FieldValue.serverTimestamp(),
         'by': riderId,
       });
+      tx.set(
+        _db
+            .collection('notifications')
+            .doc(statusNotificationId(jobId, ShipmentStatus.assigned)),
+        statusNotificationData(
+          userId: data['customerId'] as String,
+          shipmentId: jobId,
+          status: ShipmentStatus.assigned,
+        ),
+      );
     });
   }
 }

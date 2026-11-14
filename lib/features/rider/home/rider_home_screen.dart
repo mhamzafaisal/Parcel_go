@@ -13,6 +13,7 @@ import 'rider_providers.dart';
 import 'nearby_jobs_section.dart';
 import 'active_job_card.dart';
 import '../../../data/models/rating.dart';
+import '../../../core/widgets/notification_bell.dart';
 
 class RiderHomeScreen extends ConsumerStatefulWidget {
   const RiderHomeScreen({super.key});
@@ -100,7 +101,14 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
                     ],
                   ),
                 ),
-                _StatusChip(online: online),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const NotificationBell(),
+                    const SizedBox(width: 8),
+                    _StatusChip(online: online),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 20),

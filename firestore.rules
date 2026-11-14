@@ -75,6 +75,37 @@ service cloud.firestore {
       return getAfter(/databases/$(database)/documents/ratings/$(ratingId)).data.stars;
     }
 
+    // Status badalne par customer ke liye notification. Lafz fixed hain.
+    function statusTitle(kind) {
+      return kind == 'assigned' ? 'Rider assigned'
+        : kind == 'picked_up' ? 'Parcel picked up'
+        : kind == 'in_transit' ? 'Parcel on the way'
+        : 'Parcel delivered';
+    }
+
+    function statusNotifOk(notifId, n) {
+      let s = getAfter(/databases/$(database)/documents/shipments/$(n.shipmentId)).data;
+      return n.kind in ['assigned', 'picked_up', 'in_transit', 'delivered']
+        && n.kind == s.status
+        && notifId == n.shipmentId + '_' + n.kind
+        && n.title == statusTitle(n.kind)
+        && n.body == 'Tracking ID ' + n.shipmentId
+        && n.userId == s.customerId
+        && s.riderId == request.auth.uid;
+    }
+
+    // Rating milne par rider ke liye notification. Lafz fixed hain.
+    function ratingNotifOk(notifId, n) {
+      let r = getAfter(/databases/$(database)/documents/ratings/$(n.shipmentId)).data;
+      return n.kind == 'rating'
+        && notifId == n.shipmentId + '_rating'
+        && n.title == 'New rating'
+        && n.body == 'You received a new rating'
+        && !exists(/databases/$(database)/documents/ratings/$(n.shipmentId))
+        && r.customerId == request.auth.uid
+        && n.userId == r.riderId;
+    }
+
     // Isi commit ke baad job is rider ke naam "taken" hoga
     function jobTakenBy(jobId, uid) {
       let j = getAfter(/databases/$(database)/documents/jobs/$(jobId)).data;
@@ -409,6 +440,26 @@ service cloud.firestore {
         && request.resource.data.ratingSum == resource.data.ratingSum + starsOf(request.resource.data.lastRatingId);
 
       allow delete: if false;
+    }
+
+    match /notifications/{notifId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(
+             ['userId', 'kind', 'title', 'body', 'shipmentId', 'read', 'createdAt'])
+        && request.resource.data.read == false
+        && request.resource.data.createdAt == request.time
+        && (statusNotifOk(notifId, request.resource.data)
+            || ratingNotifOk(notifId, request.resource.data));
+
+      // Sirf padha hua nishan, aur sirf apna
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        && request.resource.data.read == true;
+
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
   }
 }

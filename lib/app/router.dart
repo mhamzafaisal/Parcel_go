@@ -30,6 +30,7 @@ import '../features/rider/delivery/delivery_screen.dart';
 import '../features/rider/delivery/handover_screen.dart';
 import '../features/customer/tracking/tracking_screen.dart';
 import '../features/customer/tracking/rating_screen.dart';
+import '../features/notifications/notifications_screen.dart';
 /// Login ya profile badalte hi router ko dobara check karwata hai
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
@@ -184,6 +185,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/rate/:id',
         builder: (context, state) =>
             RatingScreen(shipmentId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/create-shipment',

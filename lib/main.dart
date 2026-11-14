@@ -1,8 +1,11 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'app/messenger.dart';
 import 'app/router.dart';
 import 'app/theme.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'features/notifications/notification_toaster.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -25,6 +28,9 @@ class ParcelGoApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: router,
+      scaffoldMessengerKey: rootMessengerKey,
+      builder: (context, child) =>
+          NotificationToaster(child: child ?? const SizedBox.shrink()),
     );
   }
 }

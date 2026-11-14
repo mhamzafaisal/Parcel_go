@@ -125,7 +125,11 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
     try {
       await ref
           .read(shipmentRepositoryProvider)
-          .advanceStatus(shipmentId: s.id, riderId: uid, to: next)
+          .advanceStatus(
+              shipmentId: s.id,
+              riderId: uid,
+              customerId: s.customerId,
+              to: next)
           .timeout(const Duration(seconds: 15));
     } on TimeoutException {
       if (mounted) _snack('Taking too long. Check your internet.');

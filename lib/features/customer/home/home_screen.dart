@@ -11,6 +11,7 @@ import '../../../data/services/auth_service.dart';
 import '../../auth/auth_providers.dart';
 import 'home_providers.dart';
 import '../create_shipment/shipment_draft.dart';
+import '../../../core/widgets/notification_bell.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -98,16 +99,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                 ),
-                Container(
-                  decoration: const BoxDecoration(
-                      color: AppColors.white, shape: BoxShape.circle),
-                  child: IconButton(
-                    onPressed: () =>
-                        _snack('Notifications come in Task 25'),
-                    icon: const Icon(Icons.notifications_none,
-                        color: AppColors.textDark),
-                  ),
-                ),
+                const NotificationBell(),
               ],
             ),
             const SizedBox(height: 20),

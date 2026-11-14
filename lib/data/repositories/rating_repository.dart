@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/app_notification.dart';
 import '../models/rating.dart';
 
 final ratingRepositoryProvider =
@@ -17,7 +18,8 @@ class RatingRepository {
         .map((doc) => doc.exists ? Rating.fromDoc(doc) : null);
   }
 
-  /// Rating aur rider ka hisaab ek hi batch mein. Rules dono ko milati hain.
+  /// Rating, rider ka hisaab aur rider ki notification ek hi batch mein.
+  /// Rules in sab ko milati hain.
   Future<void> submitRating({
     required String shipmentId,
     required String riderId,
@@ -42,6 +44,10 @@ class RatingRepository {
         'lastRatingId': shipmentId,
       },
       SetOptions(merge: true),
+    );
+    batch.set(
+      _db.collection('notifications').doc(ratingNotificationId(shipmentId)),
+      ratingNotificationData(userId: riderId, shipmentId: shipmentId),
     );
     return batch.commit();
   }

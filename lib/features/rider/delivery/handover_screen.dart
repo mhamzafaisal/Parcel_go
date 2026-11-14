@@ -105,6 +105,7 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
           .completeDelivery(
             shipmentId: s.id,
             riderId: uid,
+            customerId: s.customerId,
             code: code,
             proofPhoto: _photo,
           )

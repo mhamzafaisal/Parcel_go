@@ -131,6 +131,7 @@ service cloud.firestore {
         && request.resource.data.uid == uid
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 40
         && request.resource.data.role in ['customer', 'rider']
         && request.resource.data.rating == 0
         && request.resource.data.createdAt == request.time;
@@ -144,6 +145,7 @@ service cloud.firestore {
              .hasOnly(['name', 'isOnline', 'location', 'locationAt', 'activeJobId'])
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 40
         && request.resource.data.isOnline is bool
         && (request.resource.data.isOnline == resource.data.isOnline
             || resource.data.role == 'rider')
@@ -161,6 +163,32 @@ service cloud.firestore {
                 && riderMovedAfter(resource.data.activeJobId, 'delivered')));
 
       allow delete: if false;
+
+      // Customer ke saved addresses
+      match /addresses/{addressId} {
+        allow read: if signedIn() && request.auth.uid == uid;
+
+        allow create: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(
+               ['label', 'address', 'lat', 'lng', 'createdAt'])
+          && request.resource.data.label is string
+          && request.resource.data.label.size() >= 1
+          && request.resource.data.label.size() <= 20
+          && request.resource.data.address is string
+          && request.resource.data.address.size() >= 1
+          && request.resource.data.address.size() <= 300
+          && request.resource.data.lat is number
+          && request.resource.data.lat >= -90
+          && request.resource.data.lat <= 90
+          && request.resource.data.lng is number
+          && request.resource.data.lng >= -180
+          && request.resource.data.lng <= 180
+          && request.resource.data.createdAt == request.time;
+
+        allow update: if false;
+        allow delete: if signedIn() && request.auth.uid == uid;
+      }
     }
 
     match /shipments/{shipmentId} {

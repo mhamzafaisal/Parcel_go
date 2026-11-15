@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../models/app_user.dart';
 
-final userRepositoryProvider = Provider<UserRepository>((ref) => UserRepository());
+final userRepositoryProvider = Provider<UserRepository>(
+  (ref) => UserRepository(),
+);
 
 class UserRepository {
   final _users = FirebaseFirestore.instance.collection('users');
@@ -12,11 +15,14 @@ class UserRepository {
     if (!doc.exists) return null;
     return AppUser.fromMap(doc.data()!);
   }
+
   Stream<AppUser?> watchUser(String uid) {
-    return _users.doc(uid).snapshots().map(
-          (doc) => doc.exists ? AppUser.fromMap(doc.data()!) : null,
-        );
+    return _users
+        .doc(uid)
+        .snapshots()
+        .map((doc) => doc.exists ? AppUser.fromMap(doc.data()!) : null);
   }
+
   Future<void> setRiderStatus(
     String uid, {
     required bool online,
@@ -30,6 +36,10 @@ class UserRepository {
         'locationAt': FieldValue.serverTimestamp(),
       },
     });
+  }
+
+  Future<void> updateName(String uid, String name) {
+    return _users.doc(uid).update({'name': name});
   }
 
   Future<void> createUser(AppUser user) {

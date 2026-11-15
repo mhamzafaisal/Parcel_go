@@ -1,15 +1,18 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/place_result.dart';
 import '../../../data/services/geocoding_service.dart';
 import '../../../data/services/location_service.dart';
+import '../../profile/address_providers.dart';
 
 class PickerArgs {
   final String title;
@@ -106,7 +109,8 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
     }
     if (!mounted || id != _requestId) return;
     setState(() {
-      _address = result ??
+      _address =
+          result ??
           'Pinned location (${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)})';
       _resolving = false;
     });
@@ -163,11 +167,13 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
       _snack('Please wait, finding the address...');
       return;
     }
-    context.pop(PlaceResult(
-      address: address,
-      latitude: _center.latitude,
-      longitude: _center.longitude,
-    ));
+    context.pop(
+      PlaceResult(
+        address: address,
+        latitude: _center.latitude,
+        longitude: _center.longitude,
+      ),
+    );
   }
 
   @override
@@ -183,6 +189,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
     final addressText = _resolving
         ? 'Finding address...'
         : (_address ?? 'Move the map to choose a place');
+    final saved = ref.watch(savedAddressesProvider).value ?? const [];
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.args.title)),
@@ -223,8 +230,11 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
             child: Center(
               child: Padding(
                 padding: EdgeInsets.only(bottom: 44),
-                child: Icon(Icons.location_on,
-                    size: 44, color: AppColors.green),
+                child: Icon(
+                  Icons.location_on,
+                  size: 44,
+                  color: AppColors.green,
+                ),
               ),
             ),
           ),
@@ -241,9 +251,10 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: const [
                       BoxShadow(
-                          color: AppColors.shadow,
-                          blurRadius: 12,
-                          offset: Offset(0, 4)),
+                        color: AppColors.shadow,
+                        blurRadius: 12,
+                        offset: Offset(0, 4),
+                      ),
                     ],
                   ),
                   child: TextField(
@@ -252,33 +263,68 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                     onSubmitted: (_) => _search(),
                     decoration: InputDecoration(
                       hintText: 'Search area or landmark',
-                      prefixIcon: const Icon(Icons.search,
-                          color: AppColors.textMuted),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.textMuted,
+                      ),
                       suffixIcon: _searching
                           ? const Padding(
                               padding: EdgeInsets.all(14),
                               child: SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2.5)),
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                ),
+                              ),
                             )
                           : IconButton(
                               onPressed: _search,
-                              icon: const Icon(Icons.arrow_forward,
-                                  color: AppColors.green),
+                              icon: const Icon(
+                                Icons.arrow_forward,
+                                color: AppColors.green,
+                              ),
                             ),
                     ),
                   ),
                 ),
+                if (saved.isNotEmpty &&
+                    _results.isEmpty &&
+                    _searchMessage == null) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 40,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: saved.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      itemBuilder: (context, i) {
+                        final a = saved[i];
+                        return ActionChip(
+                          backgroundColor: AppColors.white,
+                          avatar: const Icon(
+                            Icons.bookmark_outline,
+                            size: 18,
+                            color: AppColors.green,
+                          ),
+                          label: Text(a.label),
+                          onPressed: () =>
+                              _goTo(a.place.latLng, address: a.place.address),
+                        );
+                      },
+                    ),
+                  ),
+                ],
                 if (_searchMessage != null) ...[
                   const SizedBox(height: 8),
                   AppCard(
                     padding: const EdgeInsets.all(14),
                     child: Row(
                       children: [
-                        const Icon(Icons.info_outline,
-                            color: AppColors.textMuted),
+                        const Icon(
+                          Icons.info_outline,
+                          color: AppColors.textMuted,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(child: Text(_searchMessage!)),
                       ],
@@ -294,9 +340,10 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
-                            color: AppColors.shadow,
-                            blurRadius: 12,
-                            offset: Offset(0, 4)),
+                          color: AppColors.shadow,
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
                       ],
                     ),
                     child: ClipRRect(
@@ -310,10 +357,15 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                         itemBuilder: (context, i) {
                           final p = _results[i];
                           return ListTile(
-                            leading: const Icon(Icons.place_outlined,
-                                color: AppColors.green),
-                            title: Text(p.address,
-                                maxLines: 2, overflow: TextOverflow.ellipsis),
+                            leading: const Icon(
+                              Icons.place_outlined,
+                              color: AppColors.green,
+                            ),
+                            title: Text(
+                              p.address,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             onTap: () => _selectResult(p),
                           );
                         },
@@ -350,23 +402,26 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.location_on,
-                                color: AppColors.green),
+                            const Icon(
+                              Icons.location_on,
+                              color: AppColors.green,
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 addressText,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style:
-                                    Theme.of(context).textTheme.titleMedium,
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 14),
                         PrimaryButton(
-                            label: 'Confirm location', onPressed: _confirm),
+                          label: 'Confirm location',
+                          onPressed: _confirm,
+                        ),
                       ],
                     ),
                   ),

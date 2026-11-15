@@ -34,3 +34,15 @@ String dateGroupLabel(DateTime t, DateTime now) {
   if (diff == 1) return 'Yesterday';
   return DateFormat('d MMM yyyy').format(t);
 }
+
+/// "Ali Khan" se "AK", "hamza" se "H", khali naam se "?"
+String initialsOf(String name) {
+  final parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((p) => p.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) return '?';
+  if (parts.length == 1) return parts.first[0].toUpperCase();
+  return (parts.first[0] + parts.last[0]).toUpperCase();
+}

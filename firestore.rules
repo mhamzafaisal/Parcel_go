@@ -414,10 +414,11 @@ service cloud.firestore {
       allow read: if signedIn() && resource.data.riderId == request.auth.uid;
 
       allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['riderId', 'jobId', 'amount', 'deliveredAt'])
+        && request.resource.data.keys().hasOnly(['riderId', 'jobId', 'amount', 'price', 'deliveredAt'])
         && request.resource.data.riderId == request.auth.uid
         && request.resource.data.jobId == jobId
         && request.resource.data.amount == get(/databases/$(database)/documents/jobs/$(jobId)).data.riderEarning
+        && request.resource.data.price == get(/databases/$(database)/documents/jobs/$(jobId)).data.price
         && request.resource.data.deliveredAt == request.time
         && riderMovedAfter(jobId, 'delivered');
 

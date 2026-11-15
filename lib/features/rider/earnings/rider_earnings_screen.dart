@@ -1,18 +1,369 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
-class RiderEarningsScreen extends StatelessWidget {
+import '../../../app/theme.dart';
+import '../../../core/utils/format.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../data/models/earning_entry.dart';
+import '../../../data/services/earnings_summary.dart';
+import '../../../data/services/pricing_service.dart';
+import '../home/rider_providers.dart';
+
+class RiderEarningsScreen extends ConsumerStatefulWidget {
   const RiderEarningsScreen({super.key});
 
   @override
+  ConsumerState<RiderEarningsScreen> createState() =>
+      _RiderEarningsScreenState();
+}
+
+class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
+  EarningsPeriod _period = EarningsPeriod.today;
+
+  @override
   Widget build(BuildContext context) {
+    final earnings = ref.watch(riderEarningsProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Earnings')),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text('Earnings and payout history come in Task 27',
-              textAlign: TextAlign.center),
+      body: earnings.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Could not load your earnings. Check your internet.',
+              textAlign: TextAlign.center,
+            ),
+          ),
         ),
+        data: _content,
+      ),
+    );
+  }
+
+  Widget _content(List<EarningEntry> all) {
+    final now = DateTime.now();
+    final sorted = [...all]
+      ..sort((a, b) => b.deliveredAt.compareTo(a.deliveredAt));
+    final summary = summarizePeriod(sorted, _period, now);
+    final inPeriod = entriesInPeriod(sorted, _period, now);
+    final week = dailyTotals(sorted, now);
+    final sharePercent = (PricingService.riderShare * 100).round();
+
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        // Period chips
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final p in EarningsPeriod.values)
+              ChoiceChip(
+                label: Text(p.label),
+                selected: _period == p,
+                showCheckmark: false,
+                selectedColor: const Color(0x293F5B2E),
+                onSelected: (_) => setState(() => _period = p),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Summary
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.green,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'You earned (${_period.label.toLowerCase()})',
+                style: const TextStyle(color: AppColors.cream),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                formatRs(summary.earned),
+                style: const TextStyle(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.cream,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                summary.count == 0
+                    ? 'No deliveries'
+                    : '${summary.count} deliver${summary.count == 1 ? 'y' : 'ies'}  \u2022  about ${formatRs(summary.average)} each',
+                style: const TextStyle(color: AppColors.cream),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Last 7 days
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Last 7 days',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 14),
+              _WeekBars(days: week),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Cash summary
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Cash summary',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              _Line('Cash collected', formatRs(summary.cash)),
+              _Line('Your share ($sharePercent%)', formatRs(summary.earned)),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Divider(height: 1, color: AppColors.border),
+              ),
+              _Line(
+                'Platform share to hand over',
+                formatRs(summary.platformFee),
+                bold: true,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'You collect the full amount in cash from customers and keep your share. The platform share is shown for the deliveries in this period.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Deliveries
+        Text('Deliveries', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 10),
+        ..._deliveries(all, inPeriod, now),
+      ],
+    );
+  }
+
+  List<Widget> _deliveries(
+    List<EarningEntry> all,
+    List<EarningEntry> inPeriod,
+    DateTime now,
+  ) {
+    if (inPeriod.isEmpty) {
+      return [
+        AppCard(
+          child: Row(
+            children: [
+              const Icon(
+                Icons.inventory_2_outlined,
+                color: AppColors.textMuted,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  all.isEmpty
+                      ? 'No deliveries yet. Go online to start earning.'
+                      : 'No deliveries in this period.',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ];
+    }
+
+    final items = <Widget>[];
+    String? lastLabel;
+    for (final e in inPeriod) {
+      final label = dateGroupLabel(e.deliveredAt, now);
+      if (label != lastLabel) {
+        items.add(
+          Padding(
+            padding: EdgeInsets.only(
+              top: lastLabel == null ? 0 : 8,
+              bottom: 10,
+            ),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ),
+        );
+        lastLabel = label;
+      }
+      items.add(_DeliveryTile(entry: e));
+      items.add(const SizedBox(height: 10));
+    }
+    return items;
+  }
+}
+
+class _Line extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool bold;
+  const _Line(this.label, this.value, {this.bold = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(
+      fontSize: bold ? 16 : 14,
+      fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+      color: bold ? AppColors.green : AppColors.textDark,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(child: Text(label, style: style)),
+          Text(value, style: style),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeliveryTile extends StatelessWidget {
+  final EarningEntry entry;
+  const _DeliveryTile({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Row(
+        children: [
+          Container(
+            height: 42,
+            width: 42,
+            decoration: BoxDecoration(
+              color: const Color(0x1F3F5B2E),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.check_circle_outline,
+              color: AppColors.green,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.jobId,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                Text(
+                  formatDateTime(entry.deliveredAt),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '+${formatRs(entry.amount)}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.green,
+                ),
+              ),
+              Text(
+                'Cash ${formatRs(entry.cash)}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bina kisi package ke saada bar chart
+class _WeekBars extends StatelessWidget {
+  final List<DayTotal> days;
+  const _WeekBars({required this.days});
+
+  @override
+  Widget build(BuildContext context) {
+    var maxAmount = 0;
+    for (final d in days) {
+      if (d.amount > maxAmount) maxAmount = d.amount;
+    }
+    const maxBar = 80.0;
+
+    return SizedBox(
+      height: 130,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          for (var i = 0; i < days.length; i++)
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (days[i].amount > 0)
+                    Text(
+                      '${days[i].amount}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: 22,
+                    height: maxAmount == 0
+                        ? 4
+                        : 4 + (days[i].amount / maxAmount) * maxBar,
+                    decoration: BoxDecoration(
+                      color: i == days.length - 1
+                          ? AppColors.green
+                          : const Color(0x663F5B2E),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    DateFormat('E').format(days[i].day),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

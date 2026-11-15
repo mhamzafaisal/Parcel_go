@@ -1,6 +1,8 @@
 import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/utils/ids.dart';
 import '../models/parcel_options.dart';
 import '../models/place_result.dart';
@@ -9,8 +11,9 @@ import '../services/pricing_service.dart';
 import '../models/shipment_event.dart';
 import '../models/app_notification.dart';
 
-final shipmentRepositoryProvider =
-    Provider<ShipmentRepository>((ref) => ShipmentRepository());
+final shipmentRepositoryProvider = Provider<ShipmentRepository>(
+  (ref) => ShipmentRepository(),
+);
 
 class BookingResult {
   final String trackingId;
@@ -193,7 +196,8 @@ class ShipmentRepository {
         stampField = 'inTransitAt';
       default:
         throw ArgumentError(
-            'Riders can only move a parcel to picked up or in transit.');
+          'Riders can only move a parcel to picked up or in transit.',
+        );
     }
 
     final ref = _col.doc(shipmentId);
@@ -208,9 +212,7 @@ class ShipmentRepository {
       'by': riderId,
     });
     batch.set(
-      _db
-          .collection('notifications')
-          .doc(statusNotificationId(shipmentId, to)),
+      _db.collection('notifications').doc(statusNotificationId(shipmentId, to)),
       statusNotificationData(
         userId: customerId,
         shipmentId: shipmentId,
@@ -234,7 +236,8 @@ class ShipmentRepository {
   }) async {
     final jobSnap = await _db.collection('jobs').doc(shipmentId).get();
     final earning = (jobSnap.data()?['riderEarning'] as num?)?.toInt();
-    if (earning == null) throw StateError('Job not found');
+    final price = (jobSnap.data()?['price'] as num?)?.toInt();
+    if (earning == null || price == null) throw StateError('Job not found');
 
     final ref = _col.doc(shipmentId);
     final batch = _db.batch();
@@ -269,6 +272,7 @@ class ShipmentRepository {
       'riderId': riderId,
       'jobId': shipmentId,
       'amount': earning,
+      'price': price,
       'deliveredAt': FieldValue.serverTimestamp(),
     });
     batch.update(_db.collection('users').doc(riderId), {

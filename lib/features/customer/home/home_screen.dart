@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -53,7 +54,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     setState(() => _tracking = true);
     try {
-      final s = await ref.read(shipmentRepositoryProvider).findByTrackingId(uid, id);
+      final s = await ref
+          .read(shipmentRepositoryProvider)
+          .findByTrackingId(uid, id);
       if (!mounted) return;
       if (s == null) {
         _snack('No shipment found with this ID');
@@ -83,7 +86,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           children: [
             // Header
             Row(
@@ -92,21 +95,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_greeting(),
-                          style: Theme.of(context).textTheme.bodyMedium),
-                      Text(firstName.isEmpty ? 'Welcome' : firstName,
-                          style: Theme.of(context).textTheme.headlineMedium),
+                      Text(
+                        _greeting(),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      Text(
+                        firstName.isEmpty ? 'Welcome' : firstName,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
                     ],
                   ),
                 ),
-                const NotificationBell(),
+                NotificationBell(),
               ],
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
 
             // Send card
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppColors.green,
                 borderRadius: BorderRadius.circular(24),
@@ -114,98 +121,117 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.local_shipping_rounded,
-                      color: AppColors.cream, size: 34),
-                  const SizedBox(height: 12),
-                  const Text('Send a parcel',
-                      style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.cream)),
-                  const SizedBox(height: 4),
-                  const Text('Fast pickup and safe delivery across the city.',
-                      style: TextStyle(color: AppColors.cream)),
-                  const SizedBox(height: 16),
+                  Icon(
+                    Icons.local_shipping_rounded,
+                    color: AppColors.cream,
+                    size: 34,
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'Send a parcel',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.cream,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Fast pickup and safe delivery across the city.',
+                    style: TextStyle(color: AppColors.cream),
+                  ),
+                  SizedBox(height: 16),
                   SizedBox(
                     height: 46,
                     child: ElevatedButton.icon(
                       onPressed: _openCreateShipment,
-                      icon: const Icon(Icons.send_outlined, size: 18),
-                      label: const Text('Send now'),
+                      icon: Icon(Icons.send_outlined, size: 18),
+                      label: Text('Send now'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.cream,
+                        backgroundColor: context.surface,
                         foregroundColor: AppColors.green,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
 
             // Track box
             AppCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Track your parcel',
-                      style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 12),
+                  Text(
+                    'Track your parcel',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  SizedBox(height: 12),
                   TextField(
                     controller: _trackController,
                     textCapitalization: TextCapitalization.characters,
                     textInputAction: TextInputAction.search,
                     onSubmitted: (_) => _track(),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Enter tracking ID, e.g. PG1024',
-                      prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
+                      prefixIcon: Icon(Icons.search, color: context.muted),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   PrimaryButton(
-                      label: 'Track', isLoading: _tracking, onPressed: _track),
+                    label: 'Track',
+                    isLoading: _tracking,
+                    onPressed: _track,
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Recent shipments
             Row(
               children: [
                 Expanded(
-                  child: Text('Recent shipments',
-                      style: Theme.of(context).textTheme.titleMedium),
+                  child: Text(
+                    'Recent shipments',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
                 TextButton(
                   onPressed: () => context.go('/history'),
-                  child: const Text('See all',
-                      style: TextStyle(color: AppColors.green)),
+                  child: Text(
+                    'See all',
+                    style: TextStyle(color: AppColors.green),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             shipments.when(
-              loading: () => const Padding(
+              loading: () => Padding(
                 padding: EdgeInsets.all(24),
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (e, _) => const AppCard(
+              error: (e, _) => AppCard(
                 child: Text('Could not load shipments. Check your internet.'),
               ),
               data: (list) {
                 if (list.isEmpty) {
-                  return const AppCard(
+                  return AppCard(
                     child: Row(
                       children: [
-                        Icon(Icons.inventory_2_outlined,
-                            color: AppColors.textMuted),
+                        Icon(Icons.inventory_2_outlined, color: context.muted),
                         SizedBox(width: 12),
                         Expanded(
-                            child: Text(
-                                'No shipments yet. Your parcels will appear here.')),
+                          child: Text(
+                            'No shipments yet. Your parcels will appear here.',
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -214,7 +240,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     for (final s in list.take(5)) ...[
                       ShipmentCard(shipment: s),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                     ],
                   ],
                 );
@@ -222,12 +248,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
 
             if (kDebugMode) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Center(
                 child: TextButton.icon(
                   onPressed: () => context.push('/map-test'),
-                  icon: const Icon(Icons.map_outlined, size: 18),
-                  label: const Text('Map test (debug)'),
+                  icon: Icon(Icons.map_outlined, size: 18),
+                  label: Text('Map test (debug)'),
                 ),
               ),
             ],

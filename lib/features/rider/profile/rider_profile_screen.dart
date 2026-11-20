@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/appearance_tile.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/star_row.dart';
 import '../../../data/models/rating.dart';
@@ -24,7 +26,7 @@ class RiderProfileScreen extends ConsumerWidget {
         await ref
             .read(userRepositoryProvider)
             .setRiderStatus(uid, online: false)
-            .timeout(const Duration(seconds: 5));
+            .timeout(Duration(seconds: 5));
       }
     } catch (_) {
       // Internet na ho to bhi logout hone do
@@ -41,35 +43,39 @@ class RiderProfileScreen extends ConsumerWidget {
     final now = DateTime.now();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text('Profile')),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20),
         children: [
           AppCard(
             child: Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 28,
-                  backgroundColor: Color(0x1F3F5B2E),
+                  backgroundColor: Color(0x1F4F7F36),
                   child: Icon(Icons.two_wheeler, color: AppColors.green),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(user?.name ?? '-',
-                          style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 2),
-                      Text(user?.phone ?? '-',
-                          style: Theme.of(context).textTheme.bodyMedium),
+                      Text(
+                        user?.name ?? '-',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        user?.phone ?? '-',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           // Rating
           AppCard(
@@ -79,14 +85,19 @@ class RiderProfileScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Your rating',
-                          style: Theme.of(context).textTheme.bodyMedium),
-                      const SizedBox(height: 4),
-                      Text(ratingLabel(stats),
-                          style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.green)),
+                      Text(
+                        'Your rating',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        ratingLabel(stats),
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.green,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -95,18 +106,19 @@ class RiderProfileScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Reviews
-          Text('Recent reviews',
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 10),
+          Text(
+            'Recent reviews',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          SizedBox(height: 10),
           if (reviews.isEmpty)
-            const AppCard(
+            AppCard(
               child: Row(
                 children: [
-                  Icon(Icons.rate_review_outlined,
-                      color: AppColors.textMuted),
+                  Icon(Icons.rate_review_outlined, color: context.muted),
                   SizedBox(width: 12),
                   Expanded(child: Text('No reviews yet.')),
                 ],
@@ -121,22 +133,27 @@ class RiderProfileScreen extends ConsumerWidget {
                     Row(
                       children: [
                         StarRow(stars: r.stars),
-                        const Spacer(),
-                        Text(timeAgo(r.createdAt, now),
-                            style: const TextStyle(
-                                fontSize: 12, color: AppColors.textMuted)),
+                        Spacer(),
+                        Text(
+                          timeAgo(r.createdAt, now),
+                          style: TextStyle(fontSize: 12, color: context.muted),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(r.comment.isEmpty ? 'No comment' : r.comment,
-                        style: r.comment.isEmpty
-                            ? const TextStyle(color: AppColors.textMuted)
-                            : null),
+                    SizedBox(height: 6),
+                    Text(
+                      r.comment.isEmpty ? 'No comment' : r.comment,
+                      style: r.comment.isEmpty
+                          ? TextStyle(color: context.muted)
+                          : null,
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
             ],
+          SizedBox(height: 14),
+          const AppearanceTile(),
           const SizedBox(height: 14),
           PrimaryButton(
             label: 'Sign out',

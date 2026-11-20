@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../core/widgets/main_shell.dart';
 import '../data/models/app_user.dart';
 import '../data/repositories/user_repository.dart';
@@ -31,6 +32,7 @@ import '../features/rider/delivery/handover_screen.dart';
 import '../features/customer/tracking/tracking_screen.dart';
 import '../features/customer/tracking/rating_screen.dart';
 import '../features/notifications/notifications_screen.dart';
+
 /// Login ya profile badalte hi router ko dobara check karwata hai
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
@@ -38,7 +40,7 @@ class _RouterRefresh extends ChangeNotifier {
     ref.listen(appUserProvider, (prev, next) => notifyListeners());
   }
 }
- 
+
 const _publicRoutes = ['/splash', '/onboarding', '/login', '/otp'];
 const _authFlowRoutes = ['/login', '/otp', '/role-select'];
 
@@ -58,35 +60,35 @@ String? _redirect(Ref ref, String loc) {
   final auth = ref.read(authStateProvider);
   final profileAsync = ref.read(appUserProvider);
   final atSplash = loc == '/splash';
- 
+
   // 1. Firebase abhi check kar raha hai ke login hai ya nahi
   if (auth.isLoading) return atSplash ? null : '/splash';
- 
+
   // 2. Logged out
   final firebaseUser = auth.value;
   if (firebaseUser == null) {
     return _publicRoutes.contains(loc) ? null : '/login';
   }
- 
+
   // 3. Splash aur onboarding apna kaam khud karte hain
   if (atSplash || loc == '/onboarding') return null;
- 
+
   // 4. Profile load ho raha hai
   if (profileAsync.isLoading) {
     return _authFlowRoutes.contains(loc) ? null : '/splash';
   }
- 
+
   // 5. Profile load nahi ho saka (network wagera): abhi kuch nahi karte
   if (profileAsync.hasError) return null;
- 
+
   // 6. Login hai magar profile nahi bani
   final profile = profileAsync.value;
   if (profile == null) {
     return loc == '/role-select' ? null : '/role-select';
   }
- 
+
   // 7. Role ke hisaab se
-    // 7. Role ke hisaab se
+  // 7. Role ke hisaab se
   final home = UserRepository.homeRouteFor(profile);
   if (_authFlowRoutes.contains(loc)) return home;
 
@@ -94,72 +96,74 @@ String? _redirect(Ref ref, String loc) {
     return home;
   }
   if (profile.role == UserRole.rider &&
-      (_customerOnlyRoutes.contains(loc) || loc.startsWith('/track/') || loc.startsWith('/rate/'))) {
+      (_customerOnlyRoutes.contains(loc) ||
+          loc.startsWith('/track/') ||
+          loc.startsWith('/rate/'))) {
     return home;
   }
   return null;
 }
- 
+
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _RouterRefresh(ref);
   ref.onDispose(refresh.dispose);
- 
+
   final router = GoRouter(
     initialLocation: '/splash',
     refreshListenable: refresh,
     redirect: (context, state) => _redirect(ref, state.matchedLocation),
     routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
+      GoRoute(path: '/splash', builder: (context, state) => SplashScreen()),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingScreen(),
+        builder: (context, state) => OnboardingScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => LoginScreen()),
       GoRoute(
         path: '/otp',
         builder: (context, state) {
           final args = state.extra;
-          if (args is! OtpArgs) return const LoginScreen();
+          if (args is! OtpArgs) return LoginScreen();
           return OtpScreen(args: args);
         },
       ),
       GoRoute(
         path: '/role-select',
-        builder: (context, state) => const RoleSelectScreen(),
+        builder: (context, state) => RoleSelectScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             RiderShell(navigationShell: navigationShell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/rider-home',
-              builder: (context, state) => const RiderHomeScreen(),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/rider-earnings',
-              builder: (context, state) => const RiderEarningsScreen(),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/rider-profile',
-              builder: (context, state) => const RiderProfileScreen(),
-            ),
-          ]),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/rider-home',
+                builder: (context, state) => RiderHomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/rider-earnings',
+                builder: (context, state) => RiderEarningsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/rider-profile',
+                builder: (context, state) => RiderProfileScreen(),
+              ),
+            ],
+          ),
         ],
       ),
       GoRoute(
         path: '/map-test',
-        builder: (context, state) => const CurrentLocationScreen(),
+        builder: (context, state) => CurrentLocationScreen(),
       ),
       GoRoute(
         path: '/rider-job-request',
@@ -170,11 +174,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/rider-delivery',
-        builder: (context, state) => const DeliveryScreen(),
+        builder: (context, state) => DeliveryScreen(),
       ),
       GoRoute(
         path: '/rider-handover',
-        builder: (context, state) => const HandoverScreen(),
+        builder: (context, state) => HandoverScreen(),
       ),
       GoRoute(
         path: '/track/:id',
@@ -188,11 +192,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
+        builder: (context, state) => NotificationsScreen(),
       ),
       GoRoute(
         path: '/create-shipment',
-        builder: (context, state) => const CreateShipmentScreen(),
+        builder: (context, state) => CreateShipmentScreen(),
       ),
       GoRoute(
         path: '/pick-location',
@@ -201,22 +205,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           return LocationPickerScreen(
             args: args is PickerArgs
                 ? args
-                : const PickerArgs(title: 'Choose location'),
+                : PickerArgs(title: 'Choose location'),
           );
         },
       ),
       GoRoute(
         path: '/parcel-details',
-        builder: (context, state) => const ParcelDetailsScreen(),
+        builder: (context, state) => ParcelDetailsScreen(),
       ),
       GoRoute(
         path: '/shipment-summary',
-        builder: (context, state) => const ShipmentSummaryScreen(),
+        builder: (context, state) => ShipmentSummaryScreen(),
       ),
-      GoRoute(
-        path: '/payment',
-        builder: (context, state) => const PaymentScreen(),
-      ),
+      GoRoute(path: '/payment', builder: (context, state) => PaymentScreen()),
       GoRoute(
         path: '/booking-confirmed',
         redirect: (context, state) =>
@@ -228,24 +229,27 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) =>
             MainShell(navigationShell: navigationShell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/home',
-              builder: (context, state) => const HomeScreen(),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/history',
-              builder: (context, state) => const HistoryScreen(),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
-            ),
-          ]),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/home', builder: (context, state) => HomeScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/history',
+                builder: (context, state) => HistoryScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => ProfileScreen(),
+              ),
+            ],
+          ),
         ],
       ),
     ],

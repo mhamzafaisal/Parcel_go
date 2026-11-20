@@ -1,20 +1,26 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'app/messenger.dart';
 import 'app/router.dart';
 import 'app/theme.dart';
+import 'app/theme_mode_provider.dart';
+import 'data/services/theme_storage.dart';
 import 'features/notifications/notification_toaster.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint('Firebase connected: ${Firebase.app().options.projectId}');
-  runApp(const ProviderScope(child: ParcelGoApp()));
+  final themeMode = await ThemeStorage.load();
+  runApp(
+    ProviderScope(
+      overrides: [initialThemeModeProvider.overrideWithValue(themeMode)],
+      child: ParcelGoApp(),
+    ),
+  );
 }
 
 class ParcelGoApp extends ConsumerWidget {
@@ -23,14 +29,17 @@ class ParcelGoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp.router(
       title: 'ParcelGo',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
       routerConfig: router,
       scaffoldMessengerKey: rootMessengerKey,
       builder: (context, child) =>
-          NotificationToaster(child: child ?? const SizedBox.shrink()),
+          NotificationToaster(child: child ?? SizedBox.shrink()),
     );
   }
 }

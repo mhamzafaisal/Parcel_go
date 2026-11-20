@@ -168,7 +168,7 @@ class ShipmentRepository {
       }
 
       try {
-        await batch.commit().timeout(const Duration(seconds: 20));
+        await batch.commit().timeout(Duration(seconds: 20));
         return BookingResult(trackingId: trackingId, otp: otp);
       } on FirebaseException catch (e) {
         lastError = e;

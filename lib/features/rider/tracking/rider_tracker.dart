@@ -1,8 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../data/models/shipment.dart';
 import '../../../data/repositories/live_location_repository.dart';
 import '../../../data/repositories/user_repository.dart';
@@ -76,17 +78,17 @@ class RiderTracker {
     }
     if (_stopped) return;
 
-    _sub = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
-      ),
-    ).listen(
-      _onPosition,
-      onError: (Object e) => debugPrint('Tracking stream error: $e'),
-    );
-    _heartbeat =
-        Timer.periodic(const Duration(seconds: 10), (_) => _maybePublish());
+    _sub =
+        Geolocator.getPositionStream(
+          locationSettings: LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+          ),
+        ).listen(
+          _onPosition,
+          onError: (Object e) => debugPrint('Tracking stream error: $e'),
+        );
+    _heartbeat = Timer.periodic(Duration(seconds: 10), (_) => _maybePublish());
   }
 
   void _onPosition(Position p) {
@@ -117,8 +119,12 @@ class RiderTracker {
     if (profileAt == null || now.difference(profileAt) >= _profileEvery) {
       _lastProfileAt = now;
       users
-          .setRiderStatus(riderId,
-              online: true, lat: current.latitude, lng: current.longitude)
+          .setRiderStatus(
+            riderId,
+            online: true,
+            lat: current.latitude,
+            lng: current.longitude,
+          )
           .catchError((Object e) => debugPrint('Profile location failed: $e'));
     }
   }

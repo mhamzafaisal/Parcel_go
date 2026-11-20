@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../app/theme.dart';
 import '../../data/models/shipment.dart';
 import '../utils/format.dart';
@@ -20,43 +21,45 @@ class ShipmentCard extends StatelessWidget {
             height: 44,
             width: 44,
             decoration: BoxDecoration(
-              color: const Color(0x1F3F5B2E),
+              color: Color(0x1F4F7F36),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.inventory_2_outlined,
-                color: AppColors.green),
+            child: Icon(Icons.inventory_2_outlined, color: AppColors.green),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(shipment.trackingId,
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 2),
+                Text(
+                  shipment.trackingId,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                SizedBox(height: 2),
                 Text(
                   '${shipment.pickupAddress} \u2192 ${shipment.dropAddress}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   formatDateTime(shipment.createdAt),
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.textMuted),
+                  style: TextStyle(fontSize: 12, color: context.muted),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               StatusChip(status: shipment.status),
-              const SizedBox(height: 6),
-              Text(formatRs(shipment.price.round()),
-                  style: Theme.of(context).textTheme.titleMedium),
+              SizedBox(height: 6),
+              Text(
+                formatRs(shipment.price.round()),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ],
           ),
         ],

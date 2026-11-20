@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/app_card.dart';
@@ -13,6 +14,7 @@ import '../../../data/services/job_matching.dart';
 import '../../../data/services/location_service.dart';
 import '../../auth/auth_providers.dart';
 import 'job_providers.dart';
+
 import 'package:go_router/go_router.dart';
 
 class NearbyJobsSection extends ConsumerStatefulWidget {
@@ -48,9 +50,13 @@ class _NearbyJobsSectionState extends ConsumerState<NearbyJobsSection> {
       final pos = await LocationService.getCurrentPosition();
       await ref
           .read(userRepositoryProvider)
-          .setRiderStatus(uid,
-              online: true, lat: pos.latitude, lng: pos.longitude)
-          .timeout(const Duration(seconds: 15));
+          .setRiderStatus(
+            uid,
+            online: true,
+            lat: pos.latitude,
+            lng: pos.longitude,
+          )
+          .timeout(Duration(seconds: 15));
     } on LocationException catch (e) {
       if (mounted) _snack(e.message);
     } on TimeoutException {
@@ -75,61 +81,67 @@ class _NearbyJobsSectionState extends ConsumerState<NearbyJobsSection> {
         Row(
           children: [
             Expanded(
-              child: Text('Nearby parcels',
-                  style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                'Nearby parcels',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
             if (jobs.hasValue && jobs.value!.isNotEmpty)
               Container(
-                margin: const EdgeInsets.only(right: 4),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                margin: EdgeInsets.only(right: 4),
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0x1F3F5B2E),
+                  color: Color(0x1F4F7F36),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text('${jobs.value!.length}',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, color: AppColors.green)),
+                child: Text(
+                  '${jobs.value!.length}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.green,
+                  ),
+                ),
               ),
             _refreshing
-                ? const Padding(
+                ? Padding(
                     padding: EdgeInsets.all(12),
                     child: SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.5)),
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    ),
                   )
                 : IconButton(
                     tooltip: 'Update my location',
                     onPressed: _refreshLocation,
-                    icon: const Icon(Icons.my_location, color: AppColors.green),
+                    icon: Icon(Icons.my_location, color: AppColors.green),
                   ),
           ],
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         if (stale) ...[
           AppCard(
             child: Row(
               children: [
-                const Icon(Icons.warning_amber, color: AppColors.danger),
-                const SizedBox(width: 12),
-                const Expanded(
+                Icon(Icons.warning_amber, color: AppColors.danger),
+                SizedBox(width: 12),
+                Expanded(
                   child: Text(
-                      'Your location is out of date. Update it to see parcels near you.'),
+                    'Your location is out of date. Update it to see parcels near you.',
+                  ),
                 ),
-                TextButton(
-                    onPressed: _refreshLocation, child: const Text('Update')),
+                TextButton(onPressed: _refreshLocation, child: Text('Update')),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
         ],
         jobs.when(
-          loading: () => const Padding(
+          loading: () => Padding(
             padding: EdgeInsets.all(24),
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (e, _) => const AppCard(
+          error: (e, _) => AppCard(
             child: Text('Could not load parcels. Check your internet.'),
           ),
           data: (list) {
@@ -137,12 +149,12 @@ class _NearbyJobsSectionState extends ConsumerState<NearbyJobsSection> {
               return AppCard(
                 child: Row(
                   children: [
-                    const Icon(Icons.inbox_outlined,
-                        color: AppColors.textMuted),
-                    const SizedBox(width: 12),
+                    Icon(Icons.inbox_outlined, color: context.muted),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                          'No parcels within ${kJobRadiusKm.round()} km right now. New ones appear here automatically.'),
+                        'No parcels within ${kJobRadiusKm.round()} km right now. New ones appear here automatically.',
+                      ),
                     ),
                   ],
                 ),
@@ -153,10 +165,9 @@ class _NearbyJobsSectionState extends ConsumerState<NearbyJobsSection> {
                 for (final n in list) ...[
                   _JobCard(
                     nearby: n,
-                    onTap: () =>
-                        context.push('/rider-job-request', extra: n),
+                    onTap: () => context.push('/rider-job-request', extra: n),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                 ],
               ],
             );
@@ -196,46 +207,59 @@ class _JobCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('You earn',
-                      style: Theme.of(context).textTheme.bodyMedium),
-                  Text(formatRs(job.riderEarning),
-                      style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.green)),
+                  Text(
+                    'You earn',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  Text(
+                    formatRs(job.riderEarning),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.green,
+                    ),
+                  ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.radio_button_checked,
-                  size: 16, color: AppColors.green),
-              const SizedBox(width: 8),
+              Icon(
+                Icons.radio_button_checked,
+                size: 16,
+                color: AppColors.green,
+              ),
+              SizedBox(width: 8),
               Expanded(
-                child: Text(job.pickup.address,
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                child: Text(
+                  job.pickup.address,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.location_on,
-                  size: 16, color: AppColors.danger),
-              const SizedBox(width: 8),
+              Icon(Icons.location_on, size: 16, color: AppColors.danger),
+              SizedBox(width: 8),
               Expanded(
-                child: Text(job.drop.address,
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                child: Text(
+                  job.drop.address,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
             '${nearby.pickupRoadKm.toStringAsFixed(1)} km to pickup  \u2022  ${job.roadKm.toStringAsFixed(1)} km trip',
             style: Theme.of(context).textTheme.bodyMedium,
@@ -253,16 +277,19 @@ class _Tag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.cream,
+        color: context.chip,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(text,
-          style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textDark)),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: context.ink,
+        ),
+      ),
     );
   }
 }

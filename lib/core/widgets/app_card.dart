@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme.dart';
 
 class AppCard extends StatelessWidget {
@@ -15,14 +16,22 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = context.isDark;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: context.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-              color: AppColors.shadow, blurRadius: 12, offset: Offset(0, 4)),
-        ],
+        // Andhere mein saaya nazar nahi aata, isliye patli lakeer
+        border: dark ? Border.all(color: context.line) : null,
+        boxShadow: dark
+            ? null
+            : const [
+                BoxShadow(
+                  color: AppColors.shadow,
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,

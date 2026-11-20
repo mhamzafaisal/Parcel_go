@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/appearance_tile.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../data/models/place_result.dart';
 import '../../data/models/saved_address.dart';
@@ -47,7 +48,7 @@ class ProfileScreen extends ConsumerWidget {
       await ref
           .read(userRepositoryProvider)
           .updateName(uid, name)
-          .timeout(const Duration(seconds: 15));
+          .timeout(Duration(seconds: 15));
       if (context.mounted) _snack(context, 'Name updated');
     } catch (e) {
       debugPrint('Name update failed: $e');
@@ -66,7 +67,7 @@ class ProfileScreen extends ConsumerWidget {
     }
     final place = await context.push<PlaceResult>(
       '/pick-location',
-      extra: const PickerArgs(title: 'Choose address to save'),
+      extra: PickerArgs(title: 'Choose address to save'),
     );
     if (place == null || !context.mounted) return;
 
@@ -81,7 +82,7 @@ class ProfileScreen extends ConsumerWidget {
       await ref
           .read(addressRepositoryProvider)
           .add(uid, label: label, place: place)
-          .timeout(const Duration(seconds: 15));
+          .timeout(Duration(seconds: 15));
       if (context.mounted) _snack(context, 'Address saved');
     } catch (e) {
       debugPrint('Address save failed: $e');
@@ -98,18 +99,15 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Delete "${a.label}"?'),
-        content: const Text('This address will be removed from your list.'),
+        content: Text('This address will be removed from your list.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: AppColors.danger),
-            ),
+            child: Text('Delete', style: TextStyle(color: AppColors.danger)),
           ),
         ],
       ),
@@ -132,9 +130,9 @@ class ProfileScreen extends ConsumerWidget {
     final name = user?.name ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text('Profile')),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20),
         children: [
           // Profile card
           AppCard(
@@ -145,14 +143,14 @@ class ProfileScreen extends ConsumerWidget {
                   backgroundColor: AppColors.green,
                   child: Text(
                     initialsOf(name),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: AppColors.cream,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,7 +159,7 @@ class ProfileScreen extends ConsumerWidget {
                         name.isEmpty ? '-' : name,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         user?.phone ?? '-',
                         style: Theme.of(context).textTheme.bodyMedium,
@@ -174,12 +172,12 @@ class ProfileScreen extends ConsumerWidget {
                   onPressed: name.isEmpty
                       ? null
                       : () => _editName(context, ref, name),
-                  icon: const Icon(Icons.edit_outlined, color: AppColors.green),
+                  icon: Icon(Icons.edit_outlined, color: AppColors.green),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Saved addresses
           Row(
@@ -192,28 +190,25 @@ class ProfileScreen extends ConsumerWidget {
               ),
               TextButton.icon(
                 onPressed: () => _addAddress(context, ref),
-                icon: const Icon(Icons.add, size: 18, color: AppColors.green),
-                label: const Text(
-                  'Add',
-                  style: TextStyle(color: AppColors.green),
-                ),
+                icon: Icon(Icons.add, size: 18, color: AppColors.green),
+                label: Text('Add', style: TextStyle(color: AppColors.green)),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           addresses.when(
-            loading: () => const Padding(
+            loading: () => Padding(
               padding: EdgeInsets.all(16),
               child: Center(child: CircularProgressIndicator()),
             ),
             error: (e, _) =>
-                const AppCard(child: Text('Could not load your addresses.')),
+                AppCard(child: Text('Could not load your addresses.')),
             data: (list) {
               if (list.isEmpty) {
-                return const AppCard(
+                return AppCard(
                   child: Row(
                     children: [
-                      Icon(Icons.bookmark_border, color: AppColors.textMuted),
+                      Icon(Icons.bookmark_border, color: context.muted),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -231,7 +226,7 @@ class ProfileScreen extends ConsumerWidget {
                       child: Row(
                         children: [
                           Icon(_iconFor(a.label), color: AppColors.green),
-                          const SizedBox(width: 14),
+                          SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,7 +249,7 @@ class ProfileScreen extends ConsumerWidget {
                           IconButton(
                             tooltip: 'Delete',
                             onPressed: () => _deleteAddress(context, ref, a),
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.delete_outline,
                               color: AppColors.danger,
                             ),
@@ -262,43 +257,31 @@ class ProfileScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                   ],
                 ],
               );
             },
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
 
           // Settings
           Text('Settings', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           _SettingsTile(
             icon: Icons.notifications_none,
             title: 'Notifications',
             onTap: () => context.push('/notifications'),
           ),
-          const SizedBox(height: 10),
-          _SettingsTile(
-            icon: Icons.language,
-            title: 'Language',
-            subtitle: 'English',
-            onTap: () => _snack(context, 'Language options come in Task 28'),
-          ),
-          const SizedBox(height: 10),
-          _SettingsTile(
-            icon: Icons.dark_mode_outlined,
-            title: 'Dark mode',
-            subtitle: 'Off',
-            onTap: () => _snack(context, 'Dark mode comes in Task 28'),
-          ),
+          SizedBox(height: 10),
+          const AppearanceTile(),
           const SizedBox(height: 10),
           const _SettingsTile(
             icon: Icons.info_outline,
             title: 'About ParcelGo',
             subtitle: 'Version 1.0.0',
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           PrimaryButton(
             label: 'Sign out',
             icon: Icons.logout,
@@ -333,15 +316,15 @@ class _SettingsTile extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, color: AppColors.green),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Text(title, style: Theme.of(context).textTheme.titleMedium),
           ),
           if (subtitle != null)
             Text(subtitle!, style: Theme.of(context).textTheme.bodyMedium),
           if (onTap != null) ...[
-            const SizedBox(width: 6),
-            const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            SizedBox(width: 6),
+            Icon(Icons.chevron_right, color: context.muted),
           ],
         ],
       ),
@@ -381,7 +364,7 @@ class _NameDialogState extends State<_NameDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Edit name'),
+      title: Text('Edit name'),
       content: TextField(
         controller: _controller,
         autofocus: true,
@@ -393,9 +376,9 @@ class _NameDialogState extends State<_NameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text('Cancel'),
         ),
-        TextButton(onPressed: _save, child: const Text('Save')),
+        TextButton(onPressed: _save, child: Text('Save')),
       ],
     );
   }
@@ -430,7 +413,7 @@ class _LabelDialogState extends State<_LabelDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Name this address'),
+      title: Text('Name this address'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,7 +431,7 @@ class _LabelDialogState extends State<_LabelDialog> {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           TextField(
             controller: _controller,
             autofocus: true,
@@ -465,9 +448,9 @@ class _LabelDialogState extends State<_LabelDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text('Cancel'),
         ),
-        TextButton(onPressed: _save, child: const Text('Save')),
+        TextButton(onPressed: _save, child: Text('Save')),
       ],
     );
   }

@@ -1,11 +1,13 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart' hide StepState;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../app/theme.dart';
+import '../../../core/widgets/themed_tile_layer.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/utils/launcher.dart';
 import '../../../core/widgets/app_card.dart';
@@ -49,9 +51,13 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
       final pos = await LocationService.getCurrentPosition();
       await ref
           .read(userRepositoryProvider)
-          .setRiderStatus(uid,
-              online: true, lat: pos.latitude, lng: pos.longitude)
-          .timeout(const Duration(seconds: 15));
+          .setRiderStatus(
+            uid,
+            online: true,
+            lat: pos.latitude,
+            lng: pos.longitude,
+          )
+          .timeout(Duration(seconds: 15));
 
       final shipmentId = ref.read(activeShipmentProvider).value?.id;
       if (shipmentId != null) {
@@ -87,11 +93,15 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
     String message;
     if (next == ShipmentStatus.pickedUp) {
       title = 'Picked up the parcel?';
-      message = 'Confirm only after you have collected the parcel from the sender.';
+      message =
+          'Confirm only after you have collected the parcel from the sender.';
       final pickup = s.pickupPoint;
       if (riderPoint != null && pickup != null) {
-        final km =
-            const Distance().as(LengthUnit.Kilometer, riderPoint, pickup);
+        final km = const Distance().as(
+          LengthUnit.Kilometer,
+          riderPoint,
+          pickup,
+        );
         if (km > 0.5) {
           message =
               'Your last known location is ${km.toStringAsFixed(1)} km from the pickup point. $message';
@@ -110,11 +120,11 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Not yet'),
+            child: Text('Not yet'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirm'),
+            child: Text('Confirm'),
           ),
         ],
       ),
@@ -126,11 +136,12 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
       await ref
           .read(shipmentRepositoryProvider)
           .advanceStatus(
-              shipmentId: s.id,
-              riderId: uid,
-              customerId: s.customerId,
-              to: next)
-          .timeout(const Duration(seconds: 15));
+            shipmentId: s.id,
+            riderId: uid,
+            customerId: s.customerId,
+            to: next,
+          )
+          .timeout(Duration(seconds: 15));
     } on TimeoutException {
       if (mounted) _snack('Taking too long. Check your internet.');
     } catch (e) {
@@ -144,20 +155,23 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
   @override
   Widget build(BuildContext context) {
     final shipment = ref.watch(activeShipmentProvider);
-    final riderPoint = ref.watch(appUserProvider.select((a) => a.value?.location));
+    final riderPoint = ref.watch(
+      appUserProvider.select((a) => a.value?.location),
+    );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Delivery')),
+      appBar: AppBar(title: Text('Delivery')),
       body: shipment.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            const Center(child: Text('Could not load your delivery.')),
+        loading: () => Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Could not load your delivery.')),
         data: (s) {
-          if (s == null) return _NoDelivery(onBack: () => context.go('/rider-home'));
+          if (s == null) {
+            return _NoDelivery(onBack: () => context.go('/rider-home'));
+          }
           final pickup = s.pickupPoint;
           final drop = s.dropPoint;
           if (pickup == null || drop == null) {
-            return const Center(child: Text('Location details are missing.'));
+            return Center(child: Text('Location details are missing.'));
           }
           return _Body(
             shipment: s,
@@ -208,15 +222,16 @@ class _Body extends StatelessWidget {
 
     double? kmAway;
     if (rider != null) {
-      kmAway = const Distance().as(LengthUnit.Kilometer, rider!, targetPoint) *
+      kmAway =
+          const Distance().as(LengthUnit.Kilometer, rider!, targetPoint) *
           PricingService.roadFactor;
     }
 
     final cashLabel = s.payer == null
         ? null
         : s.payer == PaymentPayer.sender
-            ? 'Collect ${formatRs(s.price.round())} from the sender at pickup'
-            : 'Collect ${formatRs(s.price.round())} from the receiver on delivery';
+        ? 'Collect ${formatRs(s.price.round())} from the sender at pickup'
+        : 'Collect ${formatRs(s.price.round())} from the receiver on delivery';
 
     return Column(
       children: [
@@ -228,57 +243,68 @@ class _Body extends StatelessWidget {
               FlutterMap(
                 options: MapOptions(
                   initialCameraFit: CameraFit.bounds(
-                    bounds: LatLngBounds.fromPoints(
-                        [pickup, drop, if (rider != null) rider!]),
-                    padding: const EdgeInsets.all(48),
+                    bounds: LatLngBounds.fromPoints([pickup, drop, ?rider]),
+                    padding: EdgeInsets.all(48),
                   ),
                 ),
                 children: [
-                  TileLayer(
+                  ThemedTileLayer(
                     urlTemplate:
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.hamza.parcelgo.parcel_go',
                   ),
-                  PolylineLayer(polylines: [
-                    Polyline(
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(
                         points: [pickup, drop],
                         strokeWidth: 4,
-                        color: AppColors.green),
-                  ]),
-                  MarkerLayer(markers: [
-                    Marker(
-                      point: pickup,
-                      width: 36,
-                      height: 36,
-                      child: const Icon(Icons.radio_button_checked,
-                          color: AppColors.green, size: 30),
-                    ),
-                    Marker(
-                      point: drop,
-                      width: 40,
-                      height: 40,
-                      alignment: Alignment.topCenter,
-                      child: const Icon(Icons.location_on,
-                          color: AppColors.danger, size: 38),
-                    ),
-                    if (rider != null)
+                        color: AppColors.green,
+                      ),
+                    ],
+                  ),
+                  MarkerLayer(
+                    markers: [
                       Marker(
-                        point: rider!,
-                        width: 24,
-                        height: 24,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2F6FDE),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
-                          ),
+                        point: pickup,
+                        width: 36,
+                        height: 36,
+                        child: Icon(
+                          Icons.radio_button_checked,
+                          color: AppColors.green,
+                          size: 30,
                         ),
                       ),
-                  ]),
-                  const RichAttributionWidget(
+                      Marker(
+                        point: drop,
+                        width: 40,
+                        height: 40,
+                        alignment: Alignment.topCenter,
+                        child: Icon(
+                          Icons.location_on,
+                          color: AppColors.danger,
+                          size: 38,
+                        ),
+                      ),
+                      if (rider != null)
+                        Marker(
+                          point: rider!,
+                          width: 24,
+                          height: 24,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Color(0xFF2F6FDE),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  RichAttributionWidget(
                     attributions: [
                       TextSourceAttribution(
-                          '\u00a9 OpenStreetMap contributors'),
+                        '\u00a9 OpenStreetMap contributors',
+                      ),
                     ],
                   ),
                 ],
@@ -288,35 +314,39 @@ class _Body extends StatelessWidget {
                 right: 12,
                 child: FloatingActionButton.small(
                   heroTag: 'delivery_my_location',
-                  backgroundColor: AppColors.white,
+                  backgroundColor: context.surface,
                   foregroundColor: AppColors.green,
                   onPressed: updatingLocation ? null : onUpdateLocation,
                   child: updatingLocation
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 18,
                           width: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2.5))
-                      : const Icon(Icons.my_location),
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        )
+                      : Icon(Icons.my_location),
                 ),
               ),
               Positioned(
                 top: 12,
                 left: 12,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.white,
+                    color: context.surface,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.circle, size: 10, color: AppColors.green),
                       SizedBox(width: 6),
-                      Text('Sharing live location',
-                          style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Sharing live location',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -328,10 +358,10 @@ class _Body extends StatelessWidget {
         // Details
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             children: [
               if (s.status == ShipmentStatus.cancelled) ...[
-                const AppCard(
+                AppCard(
                   child: Row(
                     children: [
                       Icon(Icons.cancel_outlined, color: AppColors.danger),
@@ -340,7 +370,7 @@ class _Body extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
               ],
 
               // Next stop
@@ -359,15 +389,20 @@ class _Body extends StatelessWidget {
                         StatusChip(status: s.status),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(targetAddress,
-                        maxLines: 3, overflow: TextOverflow.ellipsis),
+                    SizedBox(height: 6),
+                    Text(
+                      targetAddress,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     if (kmAway != null) ...[
-                      const SizedBox(height: 6),
-                      Text('About ${kmAway.toStringAsFixed(1)} km away',
-                          style: Theme.of(context).textTheme.bodyMedium),
+                      SizedBox(height: 6),
+                      Text(
+                        'About ${kmAway.toStringAsFixed(1)} km away',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ],
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14),
                     PrimaryButton(
                       label: 'Navigate',
                       icon: Icons.directions_outlined,
@@ -376,7 +411,7 @@ class _Body extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Steps
               AppCard(
@@ -387,24 +422,25 @@ class _Body extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Cash
               if (cashLabel != null) ...[
                 AppCard(
                   child: Row(
                     children: [
-                      const Icon(Icons.payments_outlined,
-                          color: AppColors.green),
-                      const SizedBox(width: 12),
+                      Icon(Icons.payments_outlined, color: AppColors.green),
+                      SizedBox(width: 12),
                       Expanded(
-                        child: Text(cashLabel,
-                            style: Theme.of(context).textTheme.titleMedium),
+                        child: Text(
+                          cashLabel,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
               ],
 
               // Receiver
@@ -412,38 +448,43 @@ class _Body extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Receiver',
-                        style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 6),
+                    Text(
+                      'Receiver',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    SizedBox(height: 6),
                     Row(
                       children: [
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(s.receiverName,
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium),
+                              Text(
+                                s.receiverName,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
                               Text(s.receiverPhone),
                             ],
                           ),
                         ),
                         IconButton.filledTonal(
                           tooltip: 'Call receiver',
-                          onPressed: () =>
-                              callNumber(context, s.receiverPhone),
-                          icon: const Icon(Icons.call_outlined),
+                          onPressed: () => callNumber(context, s.receiverPhone),
+                          icon: Icon(Icons.call_outlined),
                         ),
                       ],
                     ),
                     if (s.notes.isNotEmpty) ...[
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.sticky_note_2_outlined,
-                              size: 18, color: AppColors.textMuted),
-                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.sticky_note_2_outlined,
+                            size: 18,
+                            color: context.muted,
+                          ),
+                          SizedBox(width: 8),
                           Expanded(child: Text(s.notes)),
                         ],
                       ),
@@ -452,7 +493,7 @@ class _Body extends StatelessWidget {
                 ),
               ),
               if (actionLabel != null) ...[
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 PrimaryButton(
                   label: actionLabel,
                   isLoading: actionBusy,
@@ -476,7 +517,7 @@ class _StepTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final done = step.state == StepState.done;
     final current = step.state == StepState.current;
-    final color = done || current ? AppColors.green : AppColors.border;
+    final color = done || current ? AppColors.green : context.line;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,30 +528,34 @@ class _StepTile extends StatelessWidget {
               height: 26,
               width: 26,
               decoration: BoxDecoration(
-                color: done ? AppColors.green : AppColors.white,
+                color: done ? AppColors.green : context.surface,
                 shape: BoxShape.circle,
                 border: Border.all(color: color, width: 2),
               ),
               child: done
-                  ? const Icon(Icons.check, size: 16, color: AppColors.white)
+                  ? Icon(Icons.check, size: 16, color: AppColors.white)
                   : current
-                      ? const Center(
-                          child: Icon(Icons.circle,
-                              size: 10, color: AppColors.green))
-                      : null,
+                  ? Center(
+                      child: Icon(
+                        Icons.circle,
+                        size: 10,
+                        color: AppColors.green,
+                      ),
+                    )
+                  : null,
             ),
             if (!isLast)
               Container(
                 width: 2,
                 height: 34,
-                color: done ? AppColors.green : AppColors.border,
+                color: done ? AppColors.green : context.line,
               ),
           ],
         ),
-        const SizedBox(width: 14),
+        SizedBox(width: 14),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(top: 2),
+            padding: EdgeInsets.only(top: 2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -520,14 +565,16 @@ class _StepTile extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: current ? FontWeight.w800 : FontWeight.w600,
                     color: step.state == StepState.upcoming
-                        ? AppColors.textMuted
-                        : AppColors.textDark,
+                        ? context.muted
+                        : context.ink,
                   ),
                 ),
                 if (current) ...[
-                  const SizedBox(height: 2),
-                  Text(step.instruction,
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  SizedBox(height: 2),
+                  Text(
+                    step.instruction,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
               ],
             ),
@@ -546,12 +593,12 @@ class _NoDelivery extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('You have no active delivery.'),
-            const SizedBox(height: 16),
+            Text('You have no active delivery.'),
+            SizedBox(height: 16),
             PrimaryButton(label: 'Back to home', onPressed: onBack),
           ],
         ),

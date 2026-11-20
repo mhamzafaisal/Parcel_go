@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/utils/phone.dart';
 import '../../../core/widgets/app_card.dart';
@@ -42,7 +43,8 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
     _fragile = d.fragile;
     _photo = d.photo;
     _weight = TextEditingController(
-        text: d.weightKg == null ? '' : d.weightKg.toString());
+      text: d.weightKg == null ? '' : d.weightKg.toString(),
+    );
     _receiverName = TextEditingController(text: d.receiverName);
     _receiverPhone = TextEditingController(text: d.receiverPhone);
     _notes = TextEditingController(text: d.notes);
@@ -106,26 +108,31 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
   void _showPhotoOptions() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: context.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.photo_camera_outlined,
-                  color: AppColors.green),
-              title: const Text('Take a photo'),
+              leading: Icon(
+                Icons.photo_camera_outlined,
+                color: AppColors.green,
+              ),
+              title: Text('Take a photo'),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _pickPhoto(ImageSource.camera);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined,
-                  color: AppColors.green),
-              title: const Text('Choose from gallery'),
+              leading: Icon(
+                Icons.photo_library_outlined,
+                color: AppColors.green,
+              ),
+              title: Text('Choose from gallery'),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _pickPhoto(ImageSource.gallery);
@@ -142,9 +149,10 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
       _snack('Please fix the highlighted fields');
       return;
     }
-    final weight =
-        double.parse(_weight.text.trim().replaceAll(',', '.'));
-    ref.read(shipmentDraftProvider.notifier).setParcel(
+    final weight = double.parse(_weight.text.trim().replaceAll(',', '.'));
+    ref
+        .read(shipmentDraftProvider.notifier)
+        .setParcel(
           category: _category,
           size: _size,
           weightKg: weight,
@@ -155,7 +163,6 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
           photo: _photo,
         );
     context.push('/shipment-summary');
-        
   }
 
   @override
@@ -165,15 +172,15 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
     // Page refresh ke baad draft khali ho jata hai
     if (!draft.hasLocations) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Parcel details')),
+        appBar: AppBar(title: Text('Parcel details')),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Please choose pickup and drop locations first.'),
-                const SizedBox(height: 16),
+                Text('Please choose pickup and drop locations first.'),
+                SizedBox(height: 16),
                 PrimaryButton(
                   label: 'Choose locations',
                   onPressed: () => context.go('/create-shipment'),
@@ -186,12 +193,12 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Parcel details')),
+      appBar: AppBar(title: Text('Parcel details')),
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             children: [
               // Route summary
               AppCard(
@@ -200,39 +207,56 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
                   children: [
                     Column(
                       children: const [
-                        Icon(Icons.radio_button_checked,
-                            size: 18, color: AppColors.green),
+                        Icon(
+                          Icons.radio_button_checked,
+                          size: 18,
+                          color: AppColors.green,
+                        ),
                         SizedBox(height: 6),
-                        Icon(Icons.location_on,
-                            size: 18, color: AppColors.danger),
+                        Icon(
+                          Icons.location_on,
+                          size: 18,
+                          color: AppColors.danger,
+                        ),
                       ],
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(draft.pickup!.address,
-                              maxLines: 1, overflow: TextOverflow.ellipsis),
-                          const SizedBox(height: 8),
-                          Text(draft.drop!.address,
-                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text(
+                            draft.pickup!.address,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            draft.drop!.address,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
                     ),
-                    const Text('Edit',
-                        style: TextStyle(
-                            color: AppColors.green,
-                            fontWeight: FontWeight.w600)),
+                    Text(
+                      'Edit',
+                      style: TextStyle(
+                        color: AppColors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // Category
-              Text('What are you sending?',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
+              Text(
+                'What are you sending?',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              SizedBox(height: 10),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -242,17 +266,19 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
                       label: Text(c.label),
                       selected: _category == c,
                       showCheckmark: false,
-                      selectedColor: const Color(0x293F5B2E),
+                      selectedColor: Color(0x294F7F36),
                       onSelected: (_) => setState(() => _category = c),
                     ),
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // Size
-              Text('Parcel size',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
+              Text(
+                'Parcel size',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              SizedBox(height: 10),
               Row(
                 children: [
                   for (final s in ParcelSize.values) ...[
@@ -267,7 +293,7 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
                   ],
                 ],
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
 
               AppTextField(
                 label: 'Weight',
@@ -275,84 +301,96 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
                 icon: Icons.scale_outlined,
                 suffixText: 'kg',
                 controller: _weight,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                 ],
                 validator: _validateWeight,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Fragile
               AppCard(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   activeThumbColor: AppColors.green,
-                  title: Text('Fragile item',
-                      style: Theme.of(context).textTheme.titleMedium),
-                  subtitle: const Text('Rider will handle it with extra care'),
+                  title: Text(
+                    'Fragile item',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  subtitle: Text('Rider will handle it with extra care'),
                   value: _fragile,
                   onChanged: (v) => setState(() => _fragile = v),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // Photo
-              Text('Parcel photo (optional)',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
+              Text(
+                'Parcel photo (optional)',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              SizedBox(height: 10),
               if (_photo == null)
                 AppCard(
                   onTap: _showPhotoOptions,
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.add_a_photo_outlined,
-                          color: AppColors.green),
+                      Icon(Icons.add_a_photo_outlined, color: AppColors.green),
                       SizedBox(width: 12),
                       Expanded(
-                          child: Text('Add a photo to help the rider identify it')),
+                        child: Text(
+                          'Add a photo to help the rider identify it',
+                        ),
+                      ),
                     ],
                   ),
                 )
               else
                 AppCard(
-                  padding: const EdgeInsets.all(10),
+                  padding: EdgeInsets.all(10),
                   child: Row(
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(14),
-                        child: Image.memory(_photo!,
-                            height: 84, width: 84, fit: BoxFit.cover),
+                        child: Image.memory(
+                          _photo!,
+                          height: 84,
+                          width: 84,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                      const SizedBox(width: 14),
+                      SizedBox(width: 14),
                       Expanded(
                         child: Text(
-                            'Photo added (${(_photo!.length / 1024).round()} KB)'),
+                          'Photo added (${(_photo!.length / 1024).round()} KB)',
+                        ),
                       ),
                       IconButton(
                         tooltip: 'Change',
                         onPressed: _showPhotoOptions,
-                        icon: const Icon(Icons.edit_outlined,
-                            color: AppColors.green),
+                        icon: Icon(Icons.edit_outlined, color: AppColors.green),
                       ),
                       IconButton(
                         tooltip: 'Remove',
                         onPressed: () => setState(() => _photo = null),
-                        icon: const Icon(Icons.delete_outline,
-                            color: AppColors.danger),
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: AppColors.danger,
+                        ),
                       ),
                     ],
                   ),
                 ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // Receiver
-              Text('Receiver details',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
+              Text(
+                'Receiver details',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              SizedBox(height: 10),
               AppTextField(
                 label: 'Receiver name',
                 hint: 'e.g. Ahmed Raza',
@@ -361,7 +399,7 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
                 textCapitalization: TextCapitalization.words,
                 validator: _validateName,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               AppTextField(
                 label: 'Receiver mobile number',
                 hint: '03001234567',
@@ -370,7 +408,7 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
                 keyboardType: TextInputType.phone,
                 validator: _validatePhone,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               AppTextField(
                 label: 'Note for rider (optional)',
                 hint: 'e.g. Call on arrival, 2nd floor',
@@ -379,7 +417,7 @@ class _ParcelDetailsScreenState extends ConsumerState<ParcelDetailsScreen> {
                 maxLines: 2,
                 maxLength: 150,
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               PrimaryButton(label: 'Continue', onPressed: _continue),
             ],
           ),
@@ -417,31 +455,35 @@ class _SizeCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        duration: Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: selected ? const Color(0x143F5B2E) : AppColors.white,
+          color: selected ? Color(0x144F7F36) : context.surface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: selected ? AppColors.green : AppColors.border,
+            color: selected ? AppColors.green : context.line,
             width: selected ? 2 : 1,
           ),
         ),
         child: Column(
           children: [
             Icon(_icon, size: 28, color: AppColors.green),
-            const SizedBox(height: 8),
-            Text(size.label,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark)),
-            const SizedBox(height: 2),
-            Text(size.hint,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                style: const TextStyle(
-                    fontSize: 11, color: AppColors.textMuted)),
+            SizedBox(height: 8),
+            Text(
+              size.label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: context.ink,
+              ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              size.hint,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: TextStyle(fontSize: 11, color: context.muted),
+            ),
           ],
         ),
       ),

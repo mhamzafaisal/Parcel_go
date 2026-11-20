@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/widgets/themed_tile_layer.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/place_result.dart';
@@ -92,7 +93,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
 
   void _scheduleResolve() {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 800), () {
+    _debounce = Timer(Duration(milliseconds: 800), () {
       _resolve(_center);
     });
     if (!_resolving) setState(() => _resolving = true);
@@ -213,11 +214,11 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
               },
             ),
             children: [
-              TileLayer(
+              ThemedTileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.hamza.parcelgo.parcel_go',
               ),
-              const RichAttributionWidget(
+              RichAttributionWidget(
                 attributions: [
                   TextSourceAttribution('\u00a9 OpenStreetMap contributors'),
                 ],
@@ -263,12 +264,9 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                     onSubmitted: (_) => _search(),
                     decoration: InputDecoration(
                       hintText: 'Search area or landmark',
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: AppColors.textMuted,
-                      ),
+                      prefixIcon: Icon(Icons.search, color: context.muted),
                       suffixIcon: _searching
-                          ? const Padding(
+                          ? Padding(
                               padding: EdgeInsets.all(14),
                               child: SizedBox(
                                 height: 20,
@@ -280,7 +278,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                             )
                           : IconButton(
                               onPressed: _search,
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.arrow_forward,
                                 color: AppColors.green,
                               ),
@@ -291,18 +289,18 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                 if (saved.isNotEmpty &&
                     _results.isEmpty &&
                     _searchMessage == null) ...[
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   SizedBox(
                     height: 40,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: saved.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      separatorBuilder: (_, _) => SizedBox(width: 8),
                       itemBuilder: (context, i) {
                         final a = saved[i];
                         return ActionChip(
-                          backgroundColor: AppColors.white,
-                          avatar: const Icon(
+                          backgroundColor: context.surface,
+                          avatar: Icon(
                             Icons.bookmark_outline,
                             size: 18,
                             color: AppColors.green,
@@ -316,27 +314,24 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                   ),
                 ],
                 if (_searchMessage != null) ...[
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   AppCard(
-                    padding: const EdgeInsets.all(14),
+                    padding: EdgeInsets.all(14),
                     child: Row(
                       children: [
-                        const Icon(
-                          Icons.info_outline,
-                          color: AppColors.textMuted,
-                        ),
-                        const SizedBox(width: 10),
+                        Icon(Icons.info_outline, color: context.muted),
+                        SizedBox(width: 10),
                         Expanded(child: Text(_searchMessage!)),
                       ],
                     ),
                   ),
                 ],
                 if (_results.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Container(
-                    constraints: const BoxConstraints(maxHeight: 240),
+                    constraints: BoxConstraints(maxHeight: 240),
                     decoration: BoxDecoration(
-                      color: AppColors.white,
+                      color: context.surface,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -353,11 +348,11 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                         padding: EdgeInsets.zero,
                         itemCount: _results.length,
                         separatorBuilder: (_, _) =>
-                            const Divider(height: 1, color: AppColors.border),
+                            Divider(height: 1, color: context.line),
                         itemBuilder: (context, i) {
                           final p = _results[i];
                           return ListTile(
-                            leading: const Icon(
+                            leading: Icon(
                               Icons.place_outlined,
                               color: AppColors.green,
                             ),
@@ -381,7 +376,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 40),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -389,24 +384,21 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                     alignment: Alignment.centerRight,
                     child: FloatingActionButton.small(
                       heroTag: 'picker_my_location',
-                      backgroundColor: AppColors.white,
+                      backgroundColor: context.surface,
                       foregroundColor: AppColors.green,
                       onPressed: () => _useMyLocation(),
-                      child: const Icon(Icons.my_location),
+                      child: Icon(Icons.my_location),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   AppCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            const Icon(
-                              Icons.location_on,
-                              color: AppColors.green,
-                            ),
-                            const SizedBox(width: 10),
+                            Icon(Icons.location_on, color: AppColors.green),
+                            SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 addressText,
@@ -417,7 +409,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        SizedBox(height: 14),
                         PrimaryButton(
                           label: 'Confirm location',
                           onPressed: _confirm,

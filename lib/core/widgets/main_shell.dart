@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../app/theme.dart';
 
 class MainShell extends StatelessWidget {
@@ -12,8 +13,8 @@ class MainShell extends StatelessWidget {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
-        backgroundColor: AppColors.white,
-        indicatorColor: const Color(0x333F5B2E),
+        backgroundColor: context.surface,
+        indicatorColor: AppColors.green.withAlpha(context.isDark ? 0x66 : 0x33),
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) => navigationShell.goBranch(
           index,

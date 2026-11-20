@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../app/theme.dart';
+import '../../../core/widgets/themed_tile_layer.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../data/services/location_service.dart';
 
@@ -72,13 +74,14 @@ class _CurrentLocationScreenState extends State<CurrentLocationScreen> {
 
   Widget _statusCard() {
     if (_loading) {
-      return const AppCard(
+      return AppCard(
         child: Row(
           children: [
             SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2.5)),
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
             SizedBox(width: 12),
             Text('Finding your location...'),
           ],
@@ -92,20 +95,20 @@ class _CurrentLocationScreenState extends State<CurrentLocationScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(_error!, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(
               children: [
                 if (_issue == LocationIssue.deniedForever)
                   TextButton(
                     onPressed: LocationService.openAppSettings,
-                    child: const Text('Open settings'),
+                    child: Text('Open settings'),
                   ),
                 if (_issue == LocationIssue.serviceOff)
                   TextButton(
                     onPressed: LocationService.openLocationSettings,
-                    child: const Text('Location settings'),
+                    child: Text('Location settings'),
                   ),
-                TextButton(onPressed: _load, child: const Text('Try again')),
+                TextButton(onPressed: _load, child: Text('Try again')),
               ],
             ),
           ],
@@ -117,8 +120,8 @@ class _CurrentLocationScreenState extends State<CurrentLocationScreen> {
     return AppCard(
       child: Row(
         children: [
-          const Icon(Icons.my_location, color: AppColors.green),
-          const SizedBox(width: 12),
+          Icon(Icons.my_location, color: AppColors.green),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
               'You are here\n${p.latitude.toStringAsFixed(5)}, ${p.longitude.toStringAsFixed(5)}',
@@ -133,7 +136,7 @@ class _CurrentLocationScreenState extends State<CurrentLocationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Map test')),
+      appBar: AppBar(title: Text('Map test')),
       body: Stack(
         children: [
           FlutterMap(
@@ -148,7 +151,7 @@ class _CurrentLocationScreenState extends State<CurrentLocationScreen> {
               },
             ),
             children: [
-              TileLayer(
+              ThemedTileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.hamza.parcelgo.parcel_go',
               ),
@@ -160,32 +163,30 @@ class _CurrentLocationScreenState extends State<CurrentLocationScreen> {
                       width: 48,
                       height: 48,
                       alignment: Alignment.topCenter,
-                      child: const Icon(Icons.location_on,
-                          size: 44, color: AppColors.green),
+                      child: Icon(
+                        Icons.location_on,
+                        size: 44,
+                        color: AppColors.green,
+                      ),
                     ),
                 ],
               ),
-              const RichAttributionWidget(
+              RichAttributionWidget(
                 attributions: [
                   TextSourceAttribution('\u00a9 OpenStreetMap contributors'),
                 ],
               ),
             ],
           ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 40,
-            child: _statusCard(),
-          ),
+          Positioned(left: 16, right: 16, bottom: 40, child: _statusCard()),
           Positioned(
             right: 16,
             bottom: 150,
             child: FloatingActionButton.small(
-              backgroundColor: AppColors.white,
+              backgroundColor: context.surface,
               foregroundColor: AppColors.green,
               onPressed: _load,
-              child: const Icon(Icons.my_location),
+              child: Icon(Icons.my_location),
             ),
           ),
         ],

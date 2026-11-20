@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../app/theme.dart';
 import '../../features/rider/tracking/rider_tracker.dart';
 
@@ -17,8 +18,8 @@ class RiderShell extends ConsumerWidget {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
-        backgroundColor: AppColors.white,
-        indicatorColor: const Color(0x333F5B2E),
+        backgroundColor: context.surface,
+        indicatorColor: AppColors.green.withAlpha(context.isDark ? 0x66 : 0x33),
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) => navigationShell.goBranch(
           index,

@@ -1,9 +1,11 @@
 import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../app/theme.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../data/services/auth_service.dart';
@@ -39,7 +41,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+    _timer = Timer.periodic(Duration(seconds: 1), (t) {
       if (!mounted) return;
       if (_secondsLeft <= 1) {
         t.cancel();
@@ -51,10 +53,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   }
 
   void _snack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
-    Future<void> _verify() async {
+  Future<void> _verify() async {
     final code = _codeController.text.trim();
     if (code.length != 6) {
       _snack('Enter the 6-digit code');
@@ -62,10 +65,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     }
     setState(() => _loading = true);
     try {
-      final cred =
-          await ref.read(authServiceProvider).verifyOtp(_confirmation, code);
-      final profile =
-          await ref.read(userRepositoryProvider).getUser(cred.user!.uid);
+      final cred = await ref
+          .read(authServiceProvider)
+          .verifyOtp(_confirmation, code);
+      final profile = await ref
+          .read(userRepositoryProvider)
+          .getUser(cred.user!.uid);
       if (!mounted) return;
       context.go(UserRepository.homeRouteFor(profile));
     } catch (e) {
@@ -78,8 +83,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   Future<void> _resend() async {
     try {
-      final result =
-          await ref.read(authServiceProvider).sendOtp(widget.args.phone);
+      final result = await ref
+          .read(authServiceProvider)
+          .sendOtp(widget.args.phone);
       if (!mounted) return;
       _confirmation = result;
       setState(() => _secondsLeft = 30);
@@ -104,44 +110,55 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       appBar: AppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Verify your number',
-                  style: Theme.of(context).textTheme.headlineMedium),
-              const SizedBox(height: 8),
-              Text('Enter the 6-digit code sent to ${widget.args.phone}',
-                  style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 32),
+              Text(
+                'Verify your number',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Enter the 6-digit code sent to ${widget.args.phone}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              SizedBox(height: 32),
               TextField(
                 controller: _codeController,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 maxLength: 6,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: const TextStyle(
-                    fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 10),
-                decoration: const InputDecoration(
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 10,
+                ),
+                decoration: InputDecoration(
                   counterText: '',
                   hintText: '------',
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               PrimaryButton(
                 label: 'Verify',
                 isLoading: _loading,
                 onPressed: _verify,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Center(
                 child: _secondsLeft > 0
-                    ? Text('Resend code in $_secondsLeft s',
-                        style: Theme.of(context).textTheme.bodyMedium)
+                    ? Text(
+                        'Resend code in $_secondsLeft s',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      )
                     : TextButton(
                         onPressed: _resend,
-                        child: const Text('Resend code',
-                            style: TextStyle(color: AppColors.green)),
+                        child: Text(
+                          'Resend code',
+                          style: TextStyle(color: AppColors.green),
+                        ),
                       ),
               ),
             ],

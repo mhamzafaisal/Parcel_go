@@ -1,16 +1,17 @@
 import 'dart:async';
-import 'dart:typed_data';
+
 import 'package:flutter/material.dart' hide StepState;
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../app/theme.dart';
+import '../../../core/widgets/themed_tile_layer.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../data/models/delivery_steps.dart';
-import '../../../data/models/parcel_options.dart';
 import '../../../data/models/shipment.dart';
 import '../../../data/models/shipment_event.dart';
 import '../../../data/models/shipment_timeline.dart';
@@ -18,7 +19,6 @@ import '../../../data/repositories/live_location_repository.dart';
 import '../../../data/services/pricing_service.dart';
 import '../../../data/services/tracking_policy.dart';
 import 'tracking_providers.dart';
-import 'rating_card.dart';
 import 'rating_providers.dart';
 
 class TrackingScreen extends ConsumerStatefulWidget {
@@ -38,7 +38,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   void initState() {
     super.initState();
     // "2 min ago" jaisi likhai taza rakhne ke liye
-    _ticker = Timer.periodic(const Duration(seconds: 15), (_) {
+    _ticker = Timer.periodic(Duration(seconds: 15), (_) {
       if (mounted) setState(() {});
     });
   }
@@ -66,18 +66,16 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Colors.black,
-        insetPadding: const EdgeInsets.all(12),
+        insetPadding: EdgeInsets.all(12),
         child: Stack(
           children: [
-            InteractiveViewer(
-              child: Image.memory(bytes, fit: BoxFit.contain),
-            ),
+            InteractiveViewer(child: Image.memory(bytes, fit: BoxFit.contain)),
             Positioned(
               top: 4,
               right: 4,
               child: IconButton(
                 onPressed: () => Navigator.pop(ctx),
-                icon: const Icon(Icons.close, color: Colors.white),
+                icon: Icon(Icons.close, color: Colors.white),
               ),
             ),
           ],
@@ -86,12 +84,12 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     );
   }
 
-  Widget RatingCard({required String shipmentId, required dynamic rating}) {
+  Widget _ratingCard({required String shipmentId, required dynamic rating}) {
     return AppCard(
       child: ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.star_outline, color: AppColors.green),
-        title: const Text('Rate your delivery'),
+        leading: Icon(Icons.star_outline, color: AppColors.green),
+        title: Text('Rate your delivery'),
         subtitle: Text('Shipment $shipmentId'),
       ),
     );
@@ -104,13 +102,12 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     final shipment = ref.watch(shipmentByIdProvider(widget.shipmentId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Track parcel')),
+      appBar: AppBar(title: Text('Track parcel')),
       body: shipment.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            const Center(child: Text('Could not load this shipment.')),
+        loading: () => Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Could not load this shipment.')),
         data: (s) => s == null
-            ? const Center(child: Text('Shipment not found.'))
+            ? Center(child: Text('Shipment not found.'))
             : _content(s),
       ),
     );
@@ -120,7 +117,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     final pickup = s.pickupPoint;
     final drop = s.dropPoint;
     if (pickup == null || drop == null) {
-      return const Center(child: Text('Location details are missing.'));
+      return Center(child: Text('Location details are missing.'));
     }
 
     const trackingStates = {
@@ -129,7 +126,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       ShipmentStatus.inTransit,
     };
     final active = trackingStates.contains(s.status);
-    final finished = s.status == ShipmentStatus.delivered ||
+    final finished =
+        s.status == ShipmentStatus.delivered ||
         s.status == ShipmentStatus.cancelled;
     final live = active ? ref.watch(liveLocationProvider(s.id)).value : null;
     final rider = live?.point;
@@ -141,7 +139,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     double? roadKm;
     int? eta;
     if (rider != null) {
-      roadKm = const Distance().as(LengthUnit.Kilometer, rider, target) *
+      roadKm =
+          const Distance().as(LengthUnit.Kilometer, rider, target) *
           PricingService.roadFactor;
       eta = etaMinutesFromKm(roadKm);
     }
@@ -149,7 +148,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         live != null && now.difference(live.at) > const Duration(seconds: 90);
 
     // Tafseel
-    final events = ref.watch(shipmentEventsProvider(s.id)).value ??
+    final events =
+        ref.watch(shipmentEventsProvider(s.id)).value ??
         const <ShipmentEvent>[];
     final timeline = buildTimeline(s.status, events);
     final code = finished ? null : ref.watch(deliveryCodeProvider(s.id)).value;
@@ -172,62 +172,74 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 mapController: _map,
                 options: MapOptions(
                   initialCameraFit: CameraFit.bounds(
-                    bounds: LatLngBounds.fromPoints(
-                        [pickup, drop, if (rider != null) rider]),
-                    padding: const EdgeInsets.all(48),
+                    bounds: LatLngBounds.fromPoints([pickup, drop, ?rider]),
+                    padding: EdgeInsets.all(48),
                   ),
                   onMapReady: () => setState(() => _mapReady = true),
                 ),
                 children: [
-                  TileLayer(
+                  ThemedTileLayer(
                     urlTemplate:
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.hamza.parcelgo.parcel_go',
                   ),
-                  PolylineLayer(polylines: [
-                    Polyline(
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(
                         points: [pickup, drop],
                         strokeWidth: 4,
-                        color: AppColors.green),
-                  ]),
-                  MarkerLayer(markers: [
-                    Marker(
-                      point: pickup,
-                      width: 36,
-                      height: 36,
-                      child: const Icon(Icons.radio_button_checked,
-                          color: AppColors.green, size: 30),
-                    ),
-                    Marker(
-                      point: drop,
-                      width: 40,
-                      height: 40,
-                      alignment: Alignment.topCenter,
-                      child: const Icon(Icons.location_on,
-                          color: AppColors.danger, size: 38),
-                    ),
-                    if (rider != null)
+                        color: AppColors.green,
+                      ),
+                    ],
+                  ),
+                  MarkerLayer(
+                    markers: [
                       Marker(
-                        point: rider,
-                        width: 44,
-                        height: 44,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: stale
-                                ? AppColors.textMuted
-                                : AppColors.green,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
-                          ),
-                          child: const Icon(Icons.two_wheeler,
-                              color: Colors.white, size: 22),
+                        point: pickup,
+                        width: 36,
+                        height: 36,
+                        child: Icon(
+                          Icons.radio_button_checked,
+                          color: AppColors.green,
+                          size: 30,
                         ),
                       ),
-                  ]),
-                  const RichAttributionWidget(
+                      Marker(
+                        point: drop,
+                        width: 40,
+                        height: 40,
+                        alignment: Alignment.topCenter,
+                        child: Icon(
+                          Icons.location_on,
+                          color: AppColors.danger,
+                          size: 38,
+                        ),
+                      ),
+                      if (rider != null)
+                        Marker(
+                          point: rider,
+                          width: 44,
+                          height: 44,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: stale ? context.muted : AppColors.green,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                            ),
+                            child: Icon(
+                              Icons.two_wheeler,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  RichAttributionWidget(
                     attributions: [
                       TextSourceAttribution(
-                          '\u00a9 OpenStreetMap contributors'),
+                        '\u00a9 OpenStreetMap contributors',
+                      ),
                     ],
                   ),
                 ],
@@ -239,10 +251,10 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                   child: FloatingActionButton.small(
                     heroTag: 'follow_rider',
                     tooltip: 'Follow rider',
-                    backgroundColor: AppColors.white,
+                    backgroundColor: context.surface,
                     foregroundColor: AppColors.green,
                     onPressed: () => _map.move(rider, 16),
-                    child: const Icon(Icons.two_wheeler),
+                    child: Icon(Icons.two_wheeler),
                   ),
                 ),
             ],
@@ -252,22 +264,25 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         // Tafseel (scroll hoti hai)
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             children: [
               Row(
                 children: [
                   Expanded(
-                    child: Text(s.trackingId,
-                        style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.5,
-                            color: AppColors.textDark)),
+                    child: Text(
+                      s.trackingId,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5,
+                        color: context.ink,
+                      ),
+                    ),
                   ),
                   StatusChip(status: s.status),
                 ],
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
 
               _statusCard(
                 s: s,
@@ -278,13 +293,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 stale: stale,
                 now: now,
               ),
-              const SizedBox(height: 14),
-              if (s.status == ShipmentStatus.delivered && s.riderId != null) ...[
-                RatingCard(
+              SizedBox(height: 14),
+              if (s.status == ShipmentStatus.delivered &&
+                  s.riderId != null) ...[
+                _ratingCard(
                   shipmentId: s.id,
                   rating: ref.watch(ratingProvider(s.id)),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
               ],
 
               // Addresses
@@ -295,26 +311,32 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.radio_button_checked,
-                            size: 18, color: AppColors.green),
-                        const SizedBox(width: 10),
+                        Icon(
+                          Icons.radio_button_checked,
+                          size: 18,
+                          color: AppColors.green,
+                        ),
+                        SizedBox(width: 10),
                         Expanded(child: Text(s.pickupAddress)),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.location_on,
-                            size: 18, color: AppColors.danger),
-                        const SizedBox(width: 10),
+                        Icon(
+                          Icons.location_on,
+                          size: 18,
+                          color: AppColors.danger,
+                        ),
+                        SizedBox(width: 10),
                         Expanded(child: Text(s.dropAddress)),
                       ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
 
               // Delivery code
               if (code != null) ...[
@@ -328,29 +350,34 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Delivery code',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium),
-                                const SizedBox(height: 4),
-                                Text(code,
-                                    style: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 6,
-                                        color: AppColors.green)),
+                                Text(
+                                  'Delivery code',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  code,
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 6,
+                                    color: AppColors.green,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                           IconButton(
                             tooltip: 'Copy',
                             onPressed: () => _copy(code, 'Delivery code'),
-                            icon: const Icon(Icons.copy_outlined,
-                                color: AppColors.green),
+                            icon: Icon(
+                              Icons.copy_outlined,
+                              color: AppColors.green,
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         'Give this code to the receiver. The rider needs it to complete the delivery. Do not share it with anyone else.',
                         style: Theme.of(context).textTheme.bodyMedium,
@@ -358,7 +385,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
               ],
 
               // Timeline
@@ -366,9 +393,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Timeline',
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 14),
+                    Text(
+                      'Timeline',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    SizedBox(height: 14),
                     for (var i = 0; i < timeline.length; i++)
                       _TimelineTile(
                         entry: timeline[i],
@@ -377,16 +406,18 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
 
               // Parcel
               AppCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Parcel',
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 10),
+                    Text(
+                      'Parcel',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    SizedBox(height: 10),
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
@@ -398,38 +429,47 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                         _Tag(s.speed.label),
                       ],
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14),
                     Row(
                       children: [
-                        const Icon(Icons.person_outline,
-                            size: 18, color: AppColors.textMuted),
-                        const SizedBox(width: 10),
+                        Icon(
+                          Icons.person_outline,
+                          size: 18,
+                          color: context.muted,
+                        ),
+                        SizedBox(width: 10),
                         Expanded(child: Text(s.receiverName)),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.phone_outlined,
-                            size: 18, color: AppColors.textMuted),
-                        const SizedBox(width: 10),
+                        Icon(
+                          Icons.phone_outlined,
+                          size: 18,
+                          color: context.muted,
+                        ),
+                        SizedBox(width: 10),
                         Expanded(child: Text(s.receiverPhone)),
                       ],
                     ),
                     if (s.notes.isNotEmpty) ...[
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.sticky_note_2_outlined,
-                              size: 18, color: AppColors.textMuted),
-                          const SizedBox(width: 10),
+                          Icon(
+                            Icons.sticky_note_2_outlined,
+                            size: 18,
+                            color: context.muted,
+                          ),
+                          SizedBox(width: 10),
                           Expanded(child: Text(s.notes)),
                         ],
                       ),
                     ],
                     if (parcelPhoto != null) ...[
-                      const SizedBox(height: 14),
+                      SizedBox(height: 14),
                       _PhotoView(
                         photo: parcelPhoto,
                         emptyText: 'Photo not available.',
@@ -439,25 +479,30 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
 
               // Price
               AppCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Price details',
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 8),
+                    Text(
+                      'Price details',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    SizedBox(height: 8),
                     for (final l in s.priceLines)
                       _KeyValueRow(l.label, formatRs(l.amount)),
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Divider(height: 1, color: AppColors.border),
+                      child: Divider(height: 1, color: context.line),
                     ),
-                    _KeyValueRow('Total', formatRs(s.price.round()),
-                        bold: true),
-                    const SizedBox(height: 6),
+                    _KeyValueRow(
+                      'Total',
+                      formatRs(s.price.round()),
+                      bold: true,
+                    ),
+                    SizedBox(height: 6),
                     Text(
                       s.payer == null
                           ? 'Cash'
@@ -470,19 +515,23 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
               // Proof of delivery
               if (proofPhoto != null) ...[
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Proof of delivery',
-                          style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Proof of delivery',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       if (deliveredAt != null) ...[
-                        const SizedBox(height: 2),
-                        Text('Delivered ${formatDateTime(deliveredAt)}',
-                            style: Theme.of(context).textTheme.bodyMedium),
+                        SizedBox(height: 2),
+                        Text(
+                          'Delivered ${formatDateTime(deliveredAt)}',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                       ],
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       _PhotoView(
                         photo: proofPhoto,
                         emptyText: 'No proof photo was added.',
@@ -492,7 +541,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
             ],
           ),
         ),
@@ -510,21 +559,22 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     required DateTime now,
   }) {
     if (s.status == ShipmentStatus.created) {
-      return const AppCard(
+      return AppCard(
         child: Row(
           children: [
             Icon(Icons.search, color: AppColors.green),
             SizedBox(width: 12),
             Expanded(
               child: Text(
-                  'Looking for a rider near the pickup location. This usually takes a few minutes.'),
+                'Looking for a rider near the pickup location. This usually takes a few minutes.',
+              ),
             ),
           ],
         ),
       );
     }
     if (s.status == ShipmentStatus.cancelled) {
-      return const AppCard(
+      return AppCard(
         child: Row(
           children: [
             Icon(Icons.cancel_outlined, color: AppColors.danger),
@@ -535,7 +585,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       );
     }
     if (s.status == ShipmentStatus.delivered) {
-      return const AppCard(
+      return AppCard(
         child: Row(
           children: [
             Icon(Icons.check_circle, color: AppColors.green),
@@ -548,13 +598,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
     // Rider raste mein / pickup ki taraf
     if (live == null || roadKm == null || eta == null) {
-      return const AppCard(
+      return AppCard(
         child: Row(
           children: [
             SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2.5)),
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
             SizedBox(width: 12),
             Expanded(child: Text("Waiting for the rider's location...")),
           ],
@@ -572,20 +623,20 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 : 'Your parcel is on the way',
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             toPickup
                 ? 'About ${roadKm.toStringAsFixed(1)} km from pickup  \u2022  arriving in about ${formatEta(eta)}'
                 : 'About ${roadKm.toStringAsFixed(1)} km away  \u2022  arriving in about ${formatEta(eta)}',
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             stale
                 ? 'Rider location last updated ${timeAgo(live.at, now)}'
                 : 'Updated ${timeAgo(live.at, now)}',
             style: TextStyle(
               fontSize: 12,
-              color: stale ? AppColors.danger : AppColors.textMuted,
+              color: stale ? AppColors.danger : context.muted,
             ),
           ),
         ],
@@ -601,16 +652,19 @@ class _Tag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.cream,
+        color: context.chip,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(text,
-          style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textDark)),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: context.ink,
+        ),
+      ),
     );
   }
 }
@@ -626,10 +680,10 @@ class _KeyValueRow extends StatelessWidget {
     final style = TextStyle(
       fontSize: bold ? 17 : 14,
       fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
-      color: bold ? AppColors.green : AppColors.textDark,
+      color: bold ? AppColors.green : context.ink,
     );
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Expanded(child: Text(label, style: style)),
@@ -654,11 +708,11 @@ class _PhotoView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return photo.when(
-      loading: () => const SizedBox(
+      loading: () => SizedBox(
         height: 60,
         child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
       ),
-      error: (e, _) => const Text('Could not load the photo.'),
+      error: (e, _) => Text('Could not load the photo.'),
       data: (bytes) => bytes == null
           ? Text(emptyText)
           : GestureDetector(
@@ -686,7 +740,7 @@ class _TimelineTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final done = entry.state == StepState.done;
     final current = entry.state == StepState.current;
-    final color = done || current ? AppColors.green : AppColors.border;
+    final color = done || current ? AppColors.green : context.line;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -697,30 +751,34 @@ class _TimelineTile extends StatelessWidget {
               height: 24,
               width: 24,
               decoration: BoxDecoration(
-                color: done ? AppColors.green : AppColors.white,
+                color: done ? AppColors.green : context.surface,
                 shape: BoxShape.circle,
                 border: Border.all(color: color, width: 2),
               ),
               child: done
-                  ? const Icon(Icons.check, size: 15, color: AppColors.white)
+                  ? Icon(Icons.check, size: 15, color: AppColors.white)
                   : current
-                      ? const Center(
-                          child: Icon(Icons.circle,
-                              size: 9, color: AppColors.green))
-                      : null,
+                  ? Center(
+                      child: Icon(
+                        Icons.circle,
+                        size: 9,
+                        color: AppColors.green,
+                      ),
+                    )
+                  : null,
             ),
             if (!isLast)
               Container(
                 width: 2,
                 height: 32,
-                color: done ? AppColors.green : AppColors.border,
+                color: done ? AppColors.green : context.line,
               ),
           ],
         ),
-        const SizedBox(width: 14),
+        SizedBox(width: 14),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(top: 2),
+            padding: EdgeInsets.only(top: 2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -730,13 +788,15 @@ class _TimelineTile extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: current ? FontWeight.w800 : FontWeight.w600,
                     color: entry.state == StepState.upcoming
-                        ? AppColors.textMuted
-                        : AppColors.textDark,
+                        ? context.muted
+                        : context.ink,
                   ),
                 ),
                 if (done && entry.at != null)
-                  Text(formatDateTime(entry.at!),
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    formatDateTime(entry.at!),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
               ],
             ),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -12,8 +13,11 @@ import 'shipment_draft.dart';
 class CreateShipmentScreen extends ConsumerWidget {
   const CreateShipmentScreen({super.key});
 
-  Future<void> _pick(BuildContext context, WidgetRef ref,
-      {required bool pickup}) async {
+  Future<void> _pick(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool pickup,
+  }) async {
     final draft = ref.read(shipmentDraftProvider);
     final result = await context.push<PlaceResult>(
       '/pick-location',
@@ -45,24 +49,32 @@ class CreateShipmentScreen extends ConsumerWidget {
 
     double? km;
     if (pickup != null && drop != null) {
-      km = const Distance().as(LengthUnit.Kilometer, pickup.latLng, drop.latLng);
+      km = const Distance().as(
+        LengthUnit.Kilometer,
+        pickup.latLng,
+        drop.latLng,
+      );
     }
     final tooClose = km != null && km < 0.05;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Send a parcel')),
+      appBar: AppBar(title: Text('Send a parcel')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           children: [
-            Text('Where should we deliver?',
-                style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 6),
-            Text('Choose pickup and drop locations on the map.',
-                style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 20),
+            Text(
+              'Where should we deliver?',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Choose pickup and drop locations on the map.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            SizedBox(height: 20),
             AppCard(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(8),
               child: Column(
                 children: [
                   _AddressTile(
@@ -75,16 +87,14 @@ class CreateShipmentScreen extends ConsumerWidget {
                   ),
                   Row(
                     children: [
-                      const SizedBox(width: 12),
-                      const Expanded(
-                          child: Divider(height: 1, color: AppColors.border)),
+                      SizedBox(width: 12),
+                      Expanded(child: Divider(height: 1, color: context.line)),
                       IconButton(
                         tooltip: 'Swap',
                         onPressed: (pickup == null && drop == null)
                             ? null
                             : ref.read(shipmentDraftProvider.notifier).swap,
-                        icon: const Icon(Icons.swap_vert,
-                            color: AppColors.green),
+                        icon: Icon(Icons.swap_vert, color: AppColors.green),
                       ),
                     ],
                   ),
@@ -100,13 +110,15 @@ class CreateShipmentScreen extends ConsumerWidget {
               ),
             ),
             if (km != null) ...[
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               AppCard(
                 child: Row(
                   children: [
-                    Icon(tooClose ? Icons.warning_amber : Icons.route,
-                        color: tooClose ? AppColors.danger : AppColors.green),
-                    const SizedBox(width: 12),
+                    Icon(
+                      tooClose ? Icons.warning_amber : Icons.route,
+                      color: tooClose ? AppColors.danger : AppColors.green,
+                    ),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         tooClose
@@ -119,7 +131,7 @@ class CreateShipmentScreen extends ConsumerWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 28),
+            SizedBox(height: 28),
             PrimaryButton(
               label: 'Continue',
               onPressed: () {
@@ -128,7 +140,7 @@ class CreateShipmentScreen extends ConsumerWidget {
                 } else if (tooClose) {
                   _snack(context, 'Pickup and drop are too close');
                 } else {
-                        context.push('/parcel-details');
+                  context.push('/parcel-details');
                 }
               },
             ),
@@ -162,36 +174,36 @@ class _AddressTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(12),
         child: Row(
           children: [
             Icon(icon, color: iconColor),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label,
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.textMuted)),
-                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    style: TextStyle(fontSize: 12, color: context.muted),
+                  ),
+                  SizedBox(height: 2),
                   Text(
                     value ?? hint,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight:
-                          value == null ? FontWeight.w400 : FontWeight.w600,
-                      color: value == null
-                          ? AppColors.textMuted
-                          : AppColors.textDark,
+                      fontWeight: value == null
+                          ? FontWeight.w400
+                          : FontWeight.w600,
+                      color: value == null ? context.muted : context.ink,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            Icon(Icons.chevron_right, color: context.muted),
           ],
         ),
       ),

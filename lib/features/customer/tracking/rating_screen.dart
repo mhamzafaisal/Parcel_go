@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -61,12 +61,11 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
             stars: _stars,
             comment: _comment.text.trim(),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(Duration(seconds: 15));
       router.pop();
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-            const SnackBar(content: Text('Thanks for your feedback!')));
+        ..showSnackBar(SnackBar(content: Text('Thanks for your feedback!')));
     } catch (e) {
       debugPrint('Rating failed: $e');
       if (mounted) {
@@ -82,20 +81,20 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
     final existing = ref.watch(ratingProvider(widget.shipmentId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Rate your rider')),
+      appBar: AppBar(title: Text('Rate your rider')),
       body: shipment.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            const Center(child: Text('Could not load this shipment.')),
+        loading: () => Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Could not load this shipment.')),
         data: (s) {
-          if (s == null) return const Center(child: Text('Shipment not found.'));
+          if (s == null) return Center(child: Text('Shipment not found.'));
           if (s.status != ShipmentStatus.delivered || s.riderId == null) {
-            return const _Message('You can rate a delivery after it is delivered.');
+            return const _Message(
+              'You can rate a delivery after it is delivered.',
+            );
           }
           return existing.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) =>
-                const Center(child: Text('Could not load your rating.')),
+            loading: () => Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('Could not load your rating.')),
             data: (r) => r != null
                 ? const _Message('You already rated this delivery.')
                 : _form(s),
@@ -108,23 +107,29 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
   Widget _form(Shipment s) {
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         children: [
-          Text('How was your delivery?',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 6),
-          Text(s.trackingId,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 28),
+          Text(
+            'How was your delivery?',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          SizedBox(height: 6),
+          Text(
+            s.trackingId,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          SizedBox(height: 28),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               for (var i = 1; i <= 5; i++)
                 IconButton(
                   tooltip: '$i star${i == 1 ? '' : 's'}',
-                  onPressed: _submitting ? null : () => setState(() => _stars = i),
+                  onPressed: _submitting
+                      ? null
+                      : () => setState(() => _stars = i),
                   iconSize: 44,
                   icon: Icon(
                     i <= _stars
@@ -135,17 +140,17 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                 ),
             ],
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             _stars == 0 ? 'Tap a star' : starLabel(_stars),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: _stars == 0 ? AppColors.textMuted : AppColors.textDark,
+              color: _stars == 0 ? context.muted : context.ink,
             ),
           ),
-          const SizedBox(height: 28),
+          SizedBox(height: 28),
           AppTextField(
             label: 'Comment (optional)',
             hint: 'Tell us more about the delivery',
@@ -154,7 +159,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
             maxLines: 3,
             maxLength: 200,
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           PrimaryButton(
             label: 'Submit',
             isLoading: _submitting,
@@ -174,7 +179,7 @@ class _Message extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Text(text, textAlign: TextAlign.center),
       ),
     );

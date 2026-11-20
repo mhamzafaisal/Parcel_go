@@ -1,9 +1,14 @@
 import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../data/models/parcel_options.dart';
 import '../../../data/models/place_result.dart';
+
 import 'package:latlong2/latlong.dart';
+
 import '../../../data/services/pricing_service.dart';
+
 class ShipmentDraft {
   final PlaceResult? pickup;
   final PlaceResult? drop;
@@ -56,7 +61,7 @@ class ShipmentDraft {
 
 class ShipmentDraftNotifier extends Notifier<ShipmentDraft> {
   @override
-  ShipmentDraft build() => const ShipmentDraft();
+  ShipmentDraft build() => ShipmentDraft();
 
   void setPickup(PlaceResult p) => state = state.copyWith(pickup: p);
 
@@ -112,12 +117,12 @@ class ShipmentDraftNotifier extends Notifier<ShipmentDraft> {
 
 final shipmentDraftProvider =
     NotifierProvider<ShipmentDraftNotifier, ShipmentDraft>(
-        ShipmentDraftNotifier.new);
+      ShipmentDraftNotifier.new,
+    );
 
 extension ShipmentDraftPricing on ShipmentDraft {
   double? get straightKm => hasLocations
-      ? const Distance()
-          .as(LengthUnit.Kilometer, pickup!.latLng, drop!.latLng)
+      ? Distance().as(LengthUnit.Kilometer, pickup!.latLng, drop!.latLng)
       : null;
 
   PriceBreakdown? get quote {

@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+
 import '../models/place_result.dart';
 
-final geocodingServiceProvider =
-    Provider<GeocodingService>((ref) => GeocodingService());
+final geocodingServiceProvider = Provider<GeocodingService>(
+  (ref) => GeocodingService(),
+);
 
 class GeocodingException implements Exception {
   final String message;
@@ -17,7 +20,8 @@ class GeocodingException implements Exception {
 /// Nominatim (OpenStreetMap) ke rules: 1 request/second, cache, app ki pehchaan.
 class GeocodingService {
   static const _host = 'nominatim.openstreetmap.org';
-  static const _countryCodes = 'pk'; // search sirf is mulk mein. Badalna ho to yahan.
+  static const _countryCodes =
+      'pk'; // search sirf is mulk mein. Badalna ho to yahan.
   static const _minGap = Duration(milliseconds: 1100);
 
   final _client = http.Client();
@@ -48,13 +52,20 @@ class GeocodingService {
 
     try {
       final data = await _throttled(() async {
-        final res = await _client.get(uri, headers: {
-          // Browser User-Agent set nahi karne deta, wahan Referer khud jata hai
-          if (!kIsWeb) 'User-Agent': 'ParcelGo/1.0 (com.hamza.parcelgo.parcel_go)',
-        }).timeout(const Duration(seconds: 12));
+        final res = await _client
+            .get(
+              uri,
+              headers: {
+                // Browser User-Agent set nahi karne deta, wahan Referer khud jata hai
+                if (!kIsWeb)
+                  'User-Agent': 'ParcelGo/1.0 (com.hamza.parcelgo.parcel_go)',
+              },
+            )
+            .timeout(Duration(seconds: 12));
         if (res.statusCode != 200) {
           throw const GeocodingException(
-              'Address service is busy. Please try again in a moment.');
+            'Address service is busy. Please try again in a moment.',
+          );
         }
         return jsonDecode(res.body);
       });
@@ -64,7 +75,8 @@ class GeocodingService {
       rethrow;
     } catch (_) {
       throw const GeocodingException(
-          'Could not reach the address service. Check your internet.');
+        'Could not reach the address service. Check your internet.',
+      );
     }
   }
 
@@ -79,11 +91,13 @@ class GeocodingService {
       'accept-language': 'en',
     });
     return (data as List)
-        .map((e) => PlaceResult(
-              address: e['display_name'] as String,
-              latitude: double.parse(e['lat'] as String),
-              longitude: double.parse(e['lon'] as String),
-            ))
+        .map(
+          (e) => PlaceResult(
+            address: e['display_name'] as String,
+            latitude: double.parse(e['lat'] as String),
+            longitude: double.parse(e['lon'] as String),
+          ),
+        )
         .toList();
   }
 

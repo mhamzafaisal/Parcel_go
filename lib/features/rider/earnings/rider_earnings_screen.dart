@@ -26,10 +26,10 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
     final earnings = ref.watch(riderEarningsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Earnings')),
+      appBar: AppBar(title: Text('Earnings')),
       body: earnings.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => const Center(
+        loading: () => Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
           child: Padding(
             padding: EdgeInsets.all(24),
             child: Text(
@@ -53,7 +53,7 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
     final sharePercent = (PricingService.riderShare * 100).round();
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       children: [
         // Period chips
         Wrap(
@@ -65,16 +65,16 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
                 label: Text(p.label),
                 selected: _period == p,
                 showCheckmark: false,
-                selectedColor: const Color(0x293F5B2E),
+                selectedColor: Color(0x294F7F36),
                 onSelected: (_) => setState(() => _period = p),
               ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // Summary
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.green,
             borderRadius: BorderRadius.circular(24),
@@ -84,28 +84,28 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
             children: [
               Text(
                 'You earned (${_period.label.toLowerCase()})',
-                style: const TextStyle(color: AppColors.cream),
+                style: TextStyle(color: AppColors.cream),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               Text(
                 formatRs(summary.earned),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
                   color: AppColors.cream,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 summary.count == 0
                     ? 'No deliveries'
                     : '${summary.count} deliver${summary.count == 1 ? 'y' : 'ies'}  \u2022  about ${formatRs(summary.average)} each',
-                style: const TextStyle(color: AppColors.cream),
+                style: TextStyle(color: AppColors.cream),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // Last 7 days
         AppCard(
@@ -116,12 +116,12 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
                 'Last 7 days',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               _WeekBars(days: week),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // Cash summary
         AppCard(
@@ -132,19 +132,19 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
                 'Cash summary',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               _Line('Cash collected', formatRs(summary.cash)),
               _Line('Your share ($sharePercent%)', formatRs(summary.earned)),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
-                child: Divider(height: 1, color: AppColors.border),
+                child: Divider(height: 1, color: context.line),
               ),
               _Line(
                 'Platform share to hand over',
                 formatRs(summary.platformFee),
                 bold: true,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text(
                 'You collect the full amount in cash from customers and keep your share. The platform share is shown for the deliveries in this period.',
                 style: Theme.of(context).textTheme.bodyMedium,
@@ -152,11 +152,11 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
 
         // Deliveries
         Text('Deliveries', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         ..._deliveries(all, inPeriod, now),
       ],
     );
@@ -172,11 +172,8 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
         AppCard(
           child: Row(
             children: [
-              const Icon(
-                Icons.inventory_2_outlined,
-                color: AppColors.textMuted,
-              ),
-              const SizedBox(width: 12),
+              Icon(Icons.inventory_2_outlined, color: context.muted),
+              SizedBox(width: 12),
               Expanded(
                 child: Text(
                   all.isEmpty
@@ -203,10 +200,10 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
             ),
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMuted,
+                color: context.muted,
               ),
             ),
           ),
@@ -214,7 +211,7 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
         lastLabel = label;
       }
       items.add(_DeliveryTile(entry: e));
-      items.add(const SizedBox(height: 10));
+      items.add(SizedBox(height: 10));
     }
     return items;
   }
@@ -231,10 +228,10 @@ class _Line extends StatelessWidget {
     final style = TextStyle(
       fontSize: bold ? 16 : 14,
       fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
-      color: bold ? AppColors.green : AppColors.textDark,
+      color: bold ? AppColors.green : context.ink,
     );
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Expanded(child: Text(label, style: style)),
@@ -258,15 +255,12 @@ class _DeliveryTile extends StatelessWidget {
             height: 42,
             width: 42,
             decoration: BoxDecoration(
-              color: const Color(0x1F3F5B2E),
+              color: Color(0x1F4F7F36),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
-              Icons.check_circle_outline,
-              color: AppColors.green,
-            ),
+            child: Icon(Icons.check_circle_outline, color: AppColors.green),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +281,7 @@ class _DeliveryTile extends StatelessWidget {
             children: [
               Text(
                 '+${formatRs(entry.amount)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                   color: AppColors.green,
@@ -295,10 +289,7 @@ class _DeliveryTile extends StatelessWidget {
               ),
               Text(
                 'Cash ${formatRs(entry.cash)}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                ),
+                style: TextStyle(fontSize: 12, color: context.muted),
               ),
             ],
           ),
@@ -334,12 +325,9 @@ class _WeekBars extends StatelessWidget {
                   if (days[i].amount > 0)
                     Text(
                       '${days[i].amount}',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: AppColors.textMuted,
-                      ),
+                      style: TextStyle(fontSize: 10, color: context.muted),
                     ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Container(
                     width: 22,
                     height: maxAmount == 0
@@ -348,17 +336,14 @@ class _WeekBars extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: i == days.length - 1
                           ? AppColors.green
-                          : const Color(0x663F5B2E),
+                          : Color(0x664F7F36),
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     DateFormat('E').format(days[i].day),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textMuted,
-                    ),
+                    style: TextStyle(fontSize: 11, color: context.muted),
                   ),
                 ],
               ),

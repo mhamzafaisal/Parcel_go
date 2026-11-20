@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/app_card.dart';
@@ -45,37 +46,42 @@ class BookingConfirmedScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           children: [
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Center(
               child: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 700),
+                duration: Duration(milliseconds: 700),
                 curve: Curves.elasticOut,
                 builder: (context, value, child) =>
                     Transform.scale(scale: value, child: child),
                 child: Container(
                   height: 96,
                   width: 96,
-                  decoration: const BoxDecoration(
-                      color: AppColors.green, shape: BoxShape.circle),
-                  child: const Icon(Icons.check,
-                      size: 56, color: AppColors.cream),
+                  decoration: BoxDecoration(
+                    color: AppColors.green,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.check, size: 56, color: AppColors.cream),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Center(
-              child: Text('Booking confirmed!',
-                  style: Theme.of(context).textTheme.headlineMedium),
+              child: Text(
+                'Booking confirmed!',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Center(
-              child: Text('A rider will be assigned to your parcel soon.',
-                  style: Theme.of(context).textTheme.bodyMedium),
+              child: Text(
+                'A rider will be assigned to your parcel soon.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Tracking ID
             AppCard(
@@ -85,15 +91,20 @@ class BookingConfirmedScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Tracking ID',
-                            style: Theme.of(context).textTheme.bodyMedium),
-                        const SizedBox(height: 4),
-                        Text(data.trackingId,
-                            style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 2,
-                                color: AppColors.textDark)),
+                        Text(
+                          'Tracking ID',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          data.trackingId,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 2,
+                            color: context.ink,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -101,13 +112,12 @@ class BookingConfirmedScreen extends StatelessWidget {
                     tooltip: 'Copy',
                     onPressed: () =>
                         _copy(context, data.trackingId, 'Tracking ID'),
-                    icon: const Icon(Icons.copy_outlined,
-                        color: AppColors.green),
+                    icon: Icon(Icons.copy_outlined, color: AppColors.green),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
 
             // OTP
             AppCard(
@@ -120,15 +130,20 @@ class BookingConfirmedScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Delivery code',
-                                style: Theme.of(context).textTheme.bodyMedium),
-                            const SizedBox(height: 4),
-                            Text(data.otp,
-                                style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 6,
-                                    color: AppColors.green)),
+                            Text(
+                              'Delivery code',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              data.otp,
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 6,
+                                color: AppColors.green,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -136,12 +151,11 @@ class BookingConfirmedScreen extends StatelessWidget {
                         tooltip: 'Copy',
                         onPressed: () =>
                             _copy(context, data.otp, 'Delivery code'),
-                        icon: const Icon(Icons.copy_outlined,
-                            color: AppColors.green),
+                        icon: Icon(Icons.copy_outlined, color: AppColors.green),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     'Give this code to the receiver. The rider will ask for it when handing over the parcel. Do not share it with anyone else.',
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -149,7 +163,7 @@ class BookingConfirmedScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
 
             // Details
             AppCard(
@@ -159,17 +173,19 @@ class BookingConfirmedScreen extends StatelessWidget {
                   _DetailRow('Payment', 'Cash'),
                   _DetailRow('Who pays', data.payer.label),
                   _DetailRow(
-                      'Estimated time', 'About ${formatEta(data.etaMinutes)}'),
+                    'Estimated time',
+                    'About ${formatEta(data.etaMinutes)}',
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             PrimaryButton(
               label: 'Track parcel',
               icon: Icons.location_searching,
               onPressed: () => context.push('/track/${data.shipmentId}'),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             SizedBox(
               height: 54,
               width: double.infinity,
@@ -177,13 +193,15 @@ class BookingConfirmedScreen extends StatelessWidget {
                 onPressed: () => context.go('/home'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.green,
-                  side: const BorderSide(color: AppColors.green),
+                  side: BorderSide(color: AppColors.green),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-                child: const Text('Back to home',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Back to home',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],
@@ -201,16 +219,18 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           Expanded(
-              child:
-                  Text(label, style: Theme.of(context).textTheme.bodyMedium)),
+            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          ),
           Flexible(
-            child: Text(value,
-                textAlign: TextAlign.end,
-                style: Theme.of(context).textTheme.titleMedium),
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
         ],
       ),

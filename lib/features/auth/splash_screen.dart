@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../app/theme.dart';
 import '../../data/services/onboarding_storage.dart';
 import 'auth_providers.dart';
@@ -31,10 +32,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Future<void> _start() async {
     if (_failed) setState(() => _failed = false);
     try {
-      await Future.wait([
-        Future.delayed(const Duration(seconds: 2)),
-        _loadSession(),
-      ]);
+      await Future.wait([Future.delayed(Duration(seconds: 2)), _loadSession()]);
       final seen = await OnboardingStorage.isSeen();
       if (!mounted) return;
       // Asli manzil router khud tay karega (login, role select, customer ya rider)
@@ -57,7 +55,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       body: Center(
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.8, end: 1.0),
-          duration: const Duration(milliseconds: 900),
+          duration: Duration(milliseconds: 900),
           curve: Curves.easeOutBack,
           builder: (context, value, child) => Opacity(
             opacity: value.clamp(0.0, 1.0),
@@ -66,29 +64,39 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.local_shipping_rounded,
-                  size: 84, color: AppColors.cream),
-              const SizedBox(height: 16),
-              const Text('ParcelGo',
-                  style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.cream)),
-              const SizedBox(height: 8),
-              const Text('Send. Track. Delivered.',
-                  style: TextStyle(fontSize: 15, color: AppColors.cream)),
+              Icon(
+                Icons.local_shipping_rounded,
+                size: 84,
+                color: AppColors.cream,
+              ),
+              SizedBox(height: 16),
+              Text(
+                'ParcelGo',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.cream,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Send. Track. Delivered.',
+                style: TextStyle(fontSize: 15, color: AppColors.cream),
+              ),
               if (_failed) ...[
-                const SizedBox(height: 28),
-                const Text('Could not load. Check your internet.',
-                    style: TextStyle(color: AppColors.cream)),
-                const SizedBox(height: 12),
+                SizedBox(height: 28),
+                Text(
+                  'Could not load. Check your internet.',
+                  style: TextStyle(color: AppColors.cream),
+                ),
+                SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: _retry,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.cream,
-                    side: const BorderSide(color: AppColors.cream),
+                    side: BorderSide(color: AppColors.cream),
                   ),
-                  child: const Text('Retry'),
+                  child: Text('Retry'),
                 ),
               ],
             ],

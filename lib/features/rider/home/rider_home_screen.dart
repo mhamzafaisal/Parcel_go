@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/app_card.dart';
@@ -53,13 +54,17 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
       if (goOnline) {
         final pos = await LocationService.getCurrentPosition();
         await repo
-            .setRiderStatus(uid,
-                online: true, lat: pos.latitude, lng: pos.longitude)
-            .timeout(const Duration(seconds: 15));
+            .setRiderStatus(
+              uid,
+              online: true,
+              lat: pos.latitude,
+              lng: pos.longitude,
+            )
+            .timeout(Duration(seconds: 15));
       } else {
         await repo
             .setRiderStatus(uid, online: false)
-            .timeout(const Duration(seconds: 15));
+            .timeout(Duration(seconds: 15));
       }
     } on LocationException catch (e) {
       if (mounted) _snack(e.message);
@@ -85,7 +90,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           children: [
             // Header
             Row(
@@ -94,34 +99,39 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_greeting(),
-                          style: Theme.of(context).textTheme.bodyMedium),
-                      Text(firstName.isEmpty ? 'Rider' : firstName,
-                          style: Theme.of(context).textTheme.headlineMedium),
+                      Text(
+                        _greeting(),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      Text(
+                        firstName.isEmpty ? 'Rider' : firstName,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
                     ],
                   ),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const NotificationBell(),
-                    const SizedBox(width: 8),
+                    NotificationBell(),
+                    SizedBox(width: 8),
                     _StatusChip(online: online),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
 
             // Online / offline card
             AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.all(20),
+              duration: Duration(milliseconds: 300),
+              padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: online ? AppColors.green : AppColors.white,
+                color: online ? AppColors.green : context.surface,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                    color: online ? AppColors.green : AppColors.border),
+                  color: online ? AppColors.green : context.line,
+                ),
               ),
               child: Row(
                 children: [
@@ -133,34 +143,29 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
                           children: [
                             if (online) ...[
                               const _PulseDot(),
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                             ],
                             Text(
                               online ? 'You are online' : 'You are offline',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: online
-                                    ? AppColors.cream
-                                    : AppColors.textDark,
+                                color: online ? AppColors.cream : context.ink,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         Text(
-                          online
-                              ? 'Waiting for parcels near you...'
-                              : 'Go online to start receiving delivery requests.',
+                          online ? 'Waiting for parcels near you...' : 'Go online to start receiving delivery requests.',
                           style: TextStyle(
-                              color: online
-                                  ? AppColors.cream
-                                  : AppColors.textMuted),
+                            color: online ? AppColors.cream : context.muted,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   _OnlineToggle(
                     online: online,
                     busy: _busy,
@@ -169,13 +174,13 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             if (user?.activeJobId != null) ...[
-              const ActiveJobCard(),
-              const SizedBox(height: 16),
+              ActiveJobCard(),
+              SizedBox(height: 16),
             ] else if (online) ...[
-              const NearbyJobsSection(),
-              const SizedBox(height: 16),
+              NearbyJobsSection(),
+              SizedBox(height: 16),
             ],
 
             // Today's earnings
@@ -183,17 +188,22 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Today's earnings",
-                      style: Theme.of(context).textTheme.bodyMedium),
-                  const SizedBox(height: 4),
-                  Text(formatRs(earnings.amount),
-                      style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.green)),
-                  const Padding(
+                  Text(
+                    "Today's earnings",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    formatRs(earnings.amount),
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.green,
+                    ),
+                  ),
+                  Padding(
                     padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Divider(height: 1, color: AppColors.border),
+                    child: Divider(height: 1, color: context.line),
                   ),
                   Row(
                     children: [
@@ -208,7 +218,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
                         child: _Stat(
                           icon: Icons.star_outline,
                           label: 'Rating',
-                          value: ratingLabel(stats)
+                          value: ratingLabel(stats),
                         ),
                       ),
                     ],
@@ -216,16 +226,17 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
-            const AppCard(
+            AppCard(
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: AppColors.textMuted),
+                  Icon(Icons.info_outline, color: context.muted),
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                        'Keep the app open while you are online so we can find parcels near you.'),
+                      'Keep the app open while you are online so we can find parcels near you.',
+                    ),
                   ),
                 ],
               ),
@@ -243,22 +254,27 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = online ? AppColors.green : AppColors.textMuted;
+    final color = online ? AppColors.green : context.muted;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: context.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.line),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.circle, size: 10, color: color),
-          const SizedBox(width: 6),
-          Text(online ? 'Online' : 'Offline',
-              style: TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+          SizedBox(width: 6),
+          Text(
+            online ? 'Online' : 'Offline',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
@@ -283,29 +299,31 @@ class _OnlineToggle extends StatelessWidget {
       child: Opacity(
         opacity: busy ? 0.7 : 1,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: Duration(milliseconds: 250),
           width: 68,
           height: 38,
-          padding: const EdgeInsets.all(4),
+          padding: EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: online ? AppColors.cream : AppColors.border,
+            color: online ? context.surface : context.line,
             borderRadius: BorderRadius.circular(20),
           ),
           child: AnimatedAlign(
-            duration: const Duration(milliseconds: 250),
+            duration: Duration(milliseconds: 250),
             alignment: online ? Alignment.centerRight : Alignment.centerLeft,
             child: Container(
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: online ? AppColors.green : AppColors.textMuted,
+                color: online ? AppColors.green : context.muted,
                 shape: BoxShape.circle,
               ),
               child: busy
-                  ? const Padding(
+                  ? Padding(
                       padding: EdgeInsets.all(7),
                       child: CircularProgressIndicator(
-                          strokeWidth: 2.5, color: AppColors.white),
+                        strokeWidth: 2.5,
+                        color: AppColors.white,
+                      ),
                     )
                   : null,
             ),
@@ -327,7 +345,7 @@ class _PulseDotState extends State<_PulseDot>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1400),
+    duration: Duration(milliseconds: 1400),
   )..repeat();
 
   @override
@@ -359,8 +377,10 @@ class _PulseDotState extends State<_PulseDot>
               Container(
                 width: 10,
                 height: 10,
-                decoration: const BoxDecoration(
-                    shape: BoxShape.circle, color: AppColors.cream),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.cream,
+                ),
               ),
             ],
           ),
@@ -381,7 +401,7 @@ class _Stat extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, color: AppColors.green),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

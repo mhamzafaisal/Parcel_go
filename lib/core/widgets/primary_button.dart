@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme.dart';
 
 class PrimaryButton extends StatelessWidget {
@@ -28,25 +29,29 @@ class PrimaryButton extends StatelessWidget {
           disabledBackgroundColor: AppColors.green,
           elevation: 0,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 height: 22,
                 width: 22,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: AppColors.white),
+                  strokeWidth: 2.5,
+                  color: AppColors.white,
+                ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
                     Icon(icon, size: 20),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                   ],
-                  Text(label,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(
+                    label,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
       ),

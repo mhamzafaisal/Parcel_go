@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../app/theme.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/primary_button.dart';
@@ -42,7 +43,7 @@ class _RoleSelectScreenState extends ConsumerState<RoleSelectScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not save your profile. Try again.')),
+        SnackBar(content: Text('Could not save your profile. Try again.')),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -60,19 +61,23 @@ class _RoleSelectScreenState extends ConsumerState<RoleSelectScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 24),
-                Text('Set up your account',
-                    style: Theme.of(context).textTheme.headlineMedium),
-                const SizedBox(height: 8),
-                Text('Tell us your name and how you will use ParcelGo.',
-                    style: Theme.of(context).textTheme.bodyMedium),
-                const SizedBox(height: 28),
+                SizedBox(height: 24),
+                Text(
+                  'Set up your account',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Tell us your name and how you will use ParcelGo.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                SizedBox(height: 28),
                 AppTextField(
                   label: 'Full name',
                   hint: 'e.g. Ali Khan',
@@ -82,13 +87,16 @@ class _RoleSelectScreenState extends ConsumerState<RoleSelectScreen> {
                       ? 'Please enter your name'
                       : null,
                 ),
-                const SizedBox(height: 24),
-                const Text('I want to',
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textDark)),
-                const SizedBox(height: 12),
+                SizedBox(height: 24),
+                Text(
+                  'I want to',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.ink,
+                  ),
+                ),
+                SizedBox(height: 12),
                 _RoleCard(
                   icon: Icons.inventory_2_outlined,
                   title: 'Send parcels',
@@ -96,7 +104,7 @@ class _RoleSelectScreenState extends ConsumerState<RoleSelectScreen> {
                   selected: _role == UserRole.customer,
                   onTap: () => setState(() => _role = UserRole.customer),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _RoleCard(
                   icon: Icons.two_wheeler_outlined,
                   title: 'Deliver parcels',
@@ -104,9 +112,12 @@ class _RoleSelectScreenState extends ConsumerState<RoleSelectScreen> {
                   selected: _role == UserRole.rider,
                   onTap: () => setState(() => _role = UserRole.rider),
                 ),
-                const SizedBox(height: 28),
+                SizedBox(height: 28),
                 PrimaryButton(
-                    label: 'Continue', isLoading: _loading, onPressed: _save),
+                  label: 'Continue',
+                  isLoading: _loading,
+                  onPressed: _save,
+                ),
               ],
             ),
           ),
@@ -137,20 +148,20 @@ class _RoleCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
+        duration: Duration(milliseconds: 200),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? const Color(0x143F5B2E) : AppColors.white,
+          color: selected ? Color(0x144F7F36) : context.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? AppColors.green : AppColors.border,
+            color: selected ? AppColors.green : context.line,
             width: selected ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
             Icon(icon, size: 30, color: AppColors.green),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,7 +173,7 @@ class _RoleCard extends StatelessWidget {
             ),
             Icon(
               selected ? Icons.check_circle : Icons.circle_outlined,
-              color: selected ? AppColors.green : AppColors.border,
+              color: selected ? AppColors.green : context.line,
             ),
           ],
         ),

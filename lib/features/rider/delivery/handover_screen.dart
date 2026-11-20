@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/utils/launcher.dart';
@@ -109,7 +110,7 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
             code: code,
             proofPhoto: _photo,
           )
-          .timeout(const Duration(seconds: 20));
+          .timeout(Duration(seconds: 20));
       router.go('/rider-home');
       say('Delivery complete! You earned ${formatRs(earning)}.');
     } on TimeoutException {
@@ -120,8 +121,7 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
         _wrongAttempts++;
         if (_wrongAttempts >= _maxWrongAttempts) {
           _wrongAttempts = 0;
-          _lockedUntil =
-              DateTime.now().add(const Duration(seconds: _lockSeconds));
+          _lockedUntil = DateTime.now().add(Duration(seconds: _lockSeconds));
           say('Too many wrong attempts. Try again in $_lockSeconds seconds.');
         } else {
           say('That code does not match. Please check it with the receiver.');
@@ -142,21 +142,20 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
     final shipment = ref.watch(activeShipmentProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Hand over parcel')),
+      appBar: AppBar(title: Text('Hand over parcel')),
       body: shipment.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            const Center(child: Text('Could not load your delivery.')),
+        loading: () => Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Could not load your delivery.')),
         data: (s) {
           if (s == null || s.status != ShipmentStatus.inTransit) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Nothing to hand over right now.'),
-                    const SizedBox(height: 16),
+                    Text('Nothing to hand over right now.'),
+                    SizedBox(height: 16),
                     PrimaryButton(
                       label: 'Back to home',
                       onPressed: () => context.go('/rider-home'),
@@ -175,20 +174,22 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
   Widget _form(Shipment s) {
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20),
         children: [
           // Receiver
           AppCard(
             child: Row(
               children: [
-                const Icon(Icons.person_outline, color: AppColors.green),
-                const SizedBox(width: 12),
+                Icon(Icons.person_outline, color: AppColors.green),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(s.receiverName,
-                          style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        s.receiverName,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       Text(s.receiverPhone),
                     ],
                   ),
@@ -196,41 +197,40 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
                 IconButton.filledTonal(
                   tooltip: 'Call receiver',
                   onPressed: () => callNumber(context, s.receiverPhone),
-                  icon: const Icon(Icons.call_outlined),
+                  icon: Icon(Icons.call_outlined),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Code
-          Text('Delivery code',
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 4),
+          Text('Delivery code', style: Theme.of(context).textTheme.titleMedium),
+          SizedBox(height: 4),
           Text(
             'Ask the receiver for the 6-digit code from the booking confirmation.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           TextField(
             controller: _code,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             maxLength: 6,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            style: const TextStyle(
-                fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 10),
-            decoration: const InputDecoration(
-              counterText: '',
-              hintText: '------',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 10,
             ),
+            decoration: InputDecoration(counterText: '', hintText: '------'),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
 
           // Cash
           if (s.payer == PaymentPayer.receiver) ...[
             AppCard(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
@@ -238,20 +238,23 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
                 value: _cashCollected,
                 onChanged: (v) => setState(() => _cashCollected = v ?? false),
                 title: Text(
-                    'I collected ${formatRs(s.price.round())} in cash from the receiver'),
+                  'I collected ${formatRs(s.price.round())} in cash from the receiver',
+                ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
 
           // Photo
-          Text('Proof photo (optional)',
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 10),
+          Text(
+            'Proof photo (optional)',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          SizedBox(height: 10),
           if (_photo == null)
             AppCard(
               onTap: _takePhoto,
-              child: const Row(
+              child: Row(
                 children: [
                   Icon(Icons.photo_camera_outlined, color: AppColors.green),
                   SizedBox(width: 12),
@@ -261,34 +264,38 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
             )
           else
             AppCard(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(10),
               child: Row(
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.memory(_photo!,
-                        height: 84, width: 84, fit: BoxFit.cover),
+                    child: Image.memory(
+                      _photo!,
+                      height: 84,
+                      width: 84,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  const SizedBox(width: 14),
+                  SizedBox(width: 14),
                   Expanded(
                     child: Text(
-                        'Photo added (${(_photo!.length / 1024).round()} KB)'),
+                      'Photo added (${(_photo!.length / 1024).round()} KB)',
+                    ),
                   ),
                   IconButton(
                     tooltip: 'Retake',
                     onPressed: _takePhoto,
-                    icon: const Icon(Icons.refresh, color: AppColors.green),
+                    icon: Icon(Icons.refresh, color: AppColors.green),
                   ),
                   IconButton(
                     tooltip: 'Remove',
                     onPressed: () => setState(() => _photo = null),
-                    icon: const Icon(Icons.delete_outline,
-                        color: AppColors.danger),
+                    icon: Icon(Icons.delete_outline, color: AppColors.danger),
                   ),
                 ],
               ),
             ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           PrimaryButton(
             label: 'Confirm delivery',
             icon: Icons.check_circle_outline,

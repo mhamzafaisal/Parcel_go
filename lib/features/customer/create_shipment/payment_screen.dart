@@ -1,7 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -42,7 +44,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
     setState(() => _booking = true);
     try {
-      final result = await ref.read(shipmentRepositoryProvider).createShipment(
+      final result = await ref
+          .read(shipmentRepositoryProvider)
+          .createShipment(
             uid: uid,
             pickup: draft.pickup!,
             drop: draft.drop!,
@@ -76,7 +80,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     } on TimeoutException {
       if (!mounted) return;
       _snack(
-          'Taking too long. Check your internet. Your booking may still go through, so check Home before trying again.');
+        'Taking too long. Check your internet. Your booking may still go through, so check Home before trying again.',
+      );
     } catch (e) {
       debugPrint('Booking failed: $e');
       if (!mounted) return;
@@ -89,7 +94,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     if (_done) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final draft = ref.watch(shipmentDraftProvider);
@@ -98,15 +103,15 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     // Page refresh ke baad draft khali ho jata hai
     if (price == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Payment')),
+        appBar: AppBar(title: Text('Payment')),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Please fill in your shipment details first.'),
-                const SizedBox(height: 16),
+                Text('Please fill in your shipment details first.'),
+                SizedBox(height: 16),
                 PrimaryButton(
                   label: 'Start again',
                   onPressed: () => context.go('/create-shipment'),
@@ -119,14 +124,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Payment')),
+      appBar: AppBar(title: Text('Payment')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           children: [
             // Total
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppColors.green,
                 borderRadius: BorderRadius.circular(24),
@@ -134,52 +139,61 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Total to pay',
-                      style: TextStyle(color: AppColors.cream)),
-                  const SizedBox(height: 4),
-                  Text(formatRs(price.total),
-                      style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.cream)),
-                  const SizedBox(height: 4),
+                  Text(
+                    'Total to pay',
+                    style: TextStyle(color: AppColors.cream),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    formatRs(price.total),
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.cream,
+                    ),
+                  ),
+                  SizedBox(height: 4),
                   Text(
                     '${draft.speed.label} delivery  \u2022  about ${formatEta(price.etaMinutes)}',
-                    style: const TextStyle(color: AppColors.cream),
+                    style: TextStyle(color: AppColors.cream),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
-            Text('Payment method',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 10),
+            Text(
+              'Payment method',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            SizedBox(height: 10),
             const _MethodTile(
               icon: Icons.payments_outlined,
               title: 'Cash',
               subtitle: 'Pay the rider in cash',
               selected: true,
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             const _MethodTile(
               icon: Icons.account_balance_wallet_outlined,
               title: 'JazzCash / Easypaisa',
               subtitle: 'Mobile wallet',
               comingSoon: true,
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             const _MethodTile(
               icon: Icons.credit_card,
               title: 'Debit / Credit card',
               subtitle: 'Visa, Mastercard',
               comingSoon: true,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
-            Text('Who will pay the rider?',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 10),
+            Text(
+              'Who will pay the rider?',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            SizedBox(height: 10),
             for (final p in PaymentPayer.values) ...[
               _MethodTile(
                 icon: p == PaymentPayer.sender
@@ -189,14 +203,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 selected: _payer == p,
                 onTap: () => setState(() => _payer = p),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
             ],
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Text(
               'By confirming, you agree that the parcel does not contain any illegal or dangerous items.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             PrimaryButton(
               label: 'Confirm booking',
               icon: Icons.check_circle_outline,
@@ -233,46 +247,49 @@ class _MethodTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       onTap: comingSoon ? null : onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(14),
+        duration: Duration(milliseconds: 200),
+        padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? const Color(0x143F5B2E) : AppColors.white,
+          color: selected ? Color(0x144F7F36) : context.surface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: selected ? AppColors.green : AppColors.border,
+            color: selected ? AppColors.green : context.line,
             width: selected ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
             Icon(icon, color: AppColors.green),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: Theme.of(context).textTheme.titleMedium),
                   if (subtitle != null)
-                    Text(subtitle!, style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      subtitle!,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                 ],
               ),
             ),
             if (comingSoon)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.cream,
+                  color: context.chip,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text('Coming soon',
-                    style:
-                        TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                child: Text(
+                  'Coming soon',
+                  style: TextStyle(fontSize: 11, color: context.muted),
+                ),
               )
             else
               Icon(
                 selected ? Icons.check_circle : Icons.circle_outlined,
-                color: selected ? AppColors.green : AppColors.border,
+                color: selected ? AppColors.green : context.line,
               ),
           ],
         ),

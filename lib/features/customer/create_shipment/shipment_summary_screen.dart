@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/app_card.dart';
@@ -23,15 +24,15 @@ class ShipmentSummaryScreen extends ConsumerWidget {
     // Page refresh ke baad draft khali ho jata hai
     if (pickup == null || drop == null || weight == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Review and price')),
+        appBar: AppBar(title: Text('Review and price')),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Please fill in your shipment details first.'),
-                const SizedBox(height: 16),
+                Text('Please fill in your shipment details first.'),
+                SizedBox(height: 16),
                 PrimaryButton(
                   label: 'Start again',
                   onPressed: () => context.go('/create-shipment'),
@@ -43,63 +44,78 @@ class ShipmentSummaryScreen extends ConsumerWidget {
       );
     }
 
-    final straightKm =
-        const Distance().as(LengthUnit.Kilometer, pickup.latLng, drop.latLng);
+    final straightKm = const Distance().as(
+      LengthUnit.Kilometer,
+      pickup.latLng,
+      drop.latLng,
+    );
     final inRange = PricingService.isInRange(straightKm);
 
     PriceBreakdown quote(DeliverySpeed s) => PricingService.calculate(
-          straightKm: straightKm,
-          size: draft.size,
-          weightKg: weight,
-          fragile: draft.fragile,
-          speed: s,
-        );
+      straightKm: straightKm,
+      size: draft.size,
+      weightKg: weight,
+      fragile: draft.fragile,
+      speed: s,
+    );
 
     final selected = quote(draft.speed);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Review and price')),
+      appBar: AppBar(title: Text('Review and price')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           children: [
             // Route
             AppCard(
               child: Row(
                 children: [
-                  const Column(
+                  Column(
                     children: [
-                      Icon(Icons.radio_button_checked,
-                          size: 18, color: AppColors.green),
+                      Icon(
+                        Icons.radio_button_checked,
+                        size: 18,
+                        color: AppColors.green,
+                      ),
                       SizedBox(height: 6),
-                      Icon(Icons.location_on,
-                          size: 18, color: AppColors.danger),
+                      Icon(
+                        Icons.location_on,
+                        size: 18,
+                        color: AppColors.danger,
+                      ),
                     ],
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(pickup.address,
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 8),
-                        Text(drop.address,
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(
+                          pickup.address,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          drop.address,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             if (!inRange) ...[
               AppCard(
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_amber, color: AppColors.danger),
-                    const SizedBox(width: 12),
+                    Icon(Icons.warning_amber, color: AppColors.danger),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'This is too far for city delivery (limit ${PricingService.maxDistanceKm.round()} km). '
@@ -110,7 +126,7 @@ class ShipmentSummaryScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               PrimaryButton(
                 label: 'Go back',
                 icon: Icons.arrow_back,
@@ -118,9 +134,11 @@ class ShipmentSummaryScreen extends ConsumerWidget {
               ),
             ] else ...[
               // Speed
-              Text('Delivery speed',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
+              Text(
+                'Delivery speed',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              SizedBox(height: 10),
               Row(
                 children: [
                   for (final s in DeliverySpeed.values) ...[
@@ -139,11 +157,11 @@ class ShipmentSummaryScreen extends ConsumerWidget {
                   ],
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // Parcel
               Text('Parcel', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               AppCard(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,10 +169,14 @@ class ShipmentSummaryScreen extends ConsumerWidget {
                     if (draft.photo != null) ...[
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.memory(draft.photo!,
-                            height: 64, width: 64, fit: BoxFit.cover),
+                        child: Image.memory(
+                          draft.photo!,
+                          height: 64,
+                          width: 64,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                      const SizedBox(width: 14),
+                      SizedBox(width: 14),
                     ],
                     Expanded(
                       child: Column(
@@ -165,13 +187,16 @@ class ShipmentSummaryScreen extends ConsumerWidget {
                             '${draft.fragile ? '  \u2022  Fragile' : ''}',
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           Text(
-                              'To: ${draft.receiverName} (${draft.receiverPhone})'),
+                            'To: ${draft.receiverName} (${draft.receiverPhone})',
+                          ),
                           if (draft.notes.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text('Note: ${draft.notes}',
-                                style: Theme.of(context).textTheme.bodyMedium),
+                            SizedBox(height: 4),
+                            Text(
+                              'Note: ${draft.notes}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                           ],
                         ],
                       ),
@@ -179,23 +204,26 @@ class ShipmentSummaryScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // Price
               Text('Price', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               AppCard(
                 child: Column(
                   children: [
                     for (final line in selected.lines)
                       _PriceRow(label: line.label, amount: line.amount),
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Divider(height: 1, color: AppColors.border),
+                      child: Divider(height: 1, color: context.line),
                     ),
                     _PriceRow(
-                        label: 'Total', amount: selected.total, bold: true),
-                    const SizedBox(height: 6),
+                      label: 'Total',
+                      amount: selected.total,
+                      bold: true,
+                    ),
+                    SizedBox(height: 6),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -206,7 +234,7 @@ class ShipmentSummaryScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               PrimaryButton(
                 label: 'Continue to payment',
                 onPressed: () => context.push('/payment'),
@@ -235,10 +263,10 @@ class _PriceRow extends StatelessWidget {
     final style = TextStyle(
       fontSize: bold ? 18 : 14,
       fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
-      color: bold ? AppColors.green : AppColors.textDark,
+      color: bold ? AppColors.green : context.ink,
     );
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
+      padding: EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
           Expanded(child: Text(label, style: style)),
@@ -268,13 +296,13 @@ class _SpeedCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(14),
+        duration: Duration(milliseconds: 200),
+        padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? const Color(0x143F5B2E) : AppColors.white,
+          color: selected ? Color(0x144F7F36) : context.surface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: selected ? AppColors.green : AppColors.border,
+            color: selected ? AppColors.green : context.line,
             width: selected ? 2 : 1,
           ),
         ),
@@ -287,22 +315,29 @@ class _SpeedCard extends StatelessWidget {
                   : Icons.local_shipping_outlined,
               color: AppColors.green,
             ),
-            const SizedBox(height: 8),
-            Text(speed.label,
-                style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark)),
-            const SizedBox(height: 2),
-            Text('About ${formatEta(quote.etaMinutes)}',
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.textMuted)),
-            const SizedBox(height: 8),
-            Text(formatRs(quote.total),
-                style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.green)),
+            SizedBox(height: 8),
+            Text(
+              speed.label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: context.ink,
+              ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              'About ${formatEta(quote.etaMinutes)}',
+              style: TextStyle(fontSize: 12, color: context.muted),
+            ),
+            SizedBox(height: 8),
+            Text(
+              formatRs(quote.total),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppColors.green,
+              ),
+            ),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../app/messenger.dart';
 import '../../data/models/app_notification.dart';
 import '../auth/auth_providers.dart';
@@ -28,13 +29,12 @@ class _NotificationToasterState extends ConsumerState<NotificationToaster> {
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 6),
+          duration: Duration(seconds: 6),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(n.title,
-                  style: const TextStyle(fontWeight: FontWeight.w700)),
+              Text(n.title, style: TextStyle(fontWeight: FontWeight.w700)),
               Text(n.body),
             ],
           ),
@@ -54,8 +54,10 @@ class _NotificationToasterState extends ConsumerState<NotificationToaster> {
       (prev, next) => _seen = null,
     );
 
-    ref.listen<AsyncValue<List<AppNotification>>>(notificationsProvider,
-        (prev, next) {
+    ref.listen<AsyncValue<List<AppNotification>>>(notificationsProvider, (
+      prev,
+      next,
+    ) {
       if (next.isLoading) return;
       final list = next.value;
       if (list == null) return;
@@ -64,8 +66,7 @@ class _NotificationToasterState extends ConsumerState<NotificationToaster> {
       _seen = list.map((n) => n.id).toSet();
       if (seen == null) return; // pehli load: banner nahi
 
-      final fresh =
-          list.where((n) => !n.read && !seen.contains(n.id)).toList();
+      final fresh = list.where((n) => !n.read && !seen.contains(n.id)).toList();
       if (fresh.isNotEmpty) _show(fresh.first); // list nayi-pehle hai
     });
 

@@ -39,11 +39,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _loading = true);
     final phone = '+92${_digits(_phoneController.text)}';
     try {
-      final result = await ref.read(authServiceProvider).sendOtp(phone);
+      final session = await ref.read(authServiceProvider).sendOtp(phone);
       if (!mounted) return;
+      // Android par code khud mil jaye to router sign-in ke baad sambhal lega.
+      if (ref.read(authServiceProvider).currentUser != null) return;
       context.push(
         '/otp',
-        extra: OtpArgs(phone: phone, confirmation: result),
+        extra: OtpArgs(phone: phone, session: session),
       );
     } catch (e) {
       if (!mounted) return;

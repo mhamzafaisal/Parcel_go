@@ -10,6 +10,7 @@ import '../../../app/theme.dart';
 import '../../../core/widgets/themed_tile_layer.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../data/models/delivery_steps.dart';
 import '../../../data/models/shipment.dart';
@@ -105,7 +106,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       appBar: AppBar(title: Text('Track parcel')),
       body: shipment.when(
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load this shipment.')),
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () =>
+              ref.invalidate(shipmentByIdProvider(widget.shipmentId)),
+        ),
         data: (s) => s == null
             ? Center(child: Text('Shipment not found.'))
             : _content(s),

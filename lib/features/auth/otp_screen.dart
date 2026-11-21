@@ -1,20 +1,17 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../data/services/auth_service.dart';
-import '../../data/repositories/user_repository.dart';
 
 class OtpArgs {
   final String phone;
-  final ConfirmationResult confirmation;
-  const OtpArgs({required this.phone, required this.confirmation});
+  final OtpSession session;
+  const OtpArgs({required this.phone, required this.session});
 }
 
 class OtpScreen extends ConsumerStatefulWidget {
@@ -27,7 +24,7 @@ class OtpScreen extends ConsumerStatefulWidget {
 
 class _OtpScreenState extends ConsumerState<OtpScreen> {
   final _codeController = TextEditingController();
-  late ConfirmationResult _confirmation;
+  late OtpSession _session;
   Timer? _timer;
   int _secondsLeft = 30;
   bool _loading = false;
@@ -35,7 +32,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   @override
   void initState() {
     super.initState();
-    _confirmation = widget.args.confirmation;
+    _session = widget.args.session;
     _startTimer();
   }
 
@@ -54,7 +51,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   void _snack(String message) {
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _verify() async {
@@ -65,14 +63,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     }
     setState(() => _loading = true);
     try {
-      final cred = await ref
-          .read(authServiceProvider)
-          .verifyOtp(_confirmation, code);
-      final profile = await ref
-          .read(userRepositoryProvider)
-          .getUser(cred.user!.uid);
-      if (!mounted) return;
-      context.go(UserRepository.homeRouteFor(profile));
+      await _session.confirm(code).timeout(const Duration(seconds: 30));
+      // Aage ka (Home ya Role select) router khud tay karta hai.
     } catch (e) {
       if (!mounted) return;
       _snack(AuthService.friendlyError(e));
@@ -83,11 +75,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   Future<void> _resend() async {
     try {
-      final result = await ref
+      final session = await ref
           .read(authServiceProvider)
-          .sendOtp(widget.args.phone);
+          .sendOtp(widget.args.phone, resendToken: _session.resendToken);
       if (!mounted) return;
-      _confirmation = result;
+      _session = session;
       setState(() => _secondsLeft = 30);
       _startTimer();
       _snack('A new code was sent');

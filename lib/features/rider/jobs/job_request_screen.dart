@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme.dart';
 import '../../../core/widgets/themed_tile_layer.dart';
 import '../../../core/utils/format.dart';
+import '../../../core/utils/errors.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/parcel_options.dart';
@@ -104,7 +105,7 @@ class _JobRequestScreenState extends ConsumerState<JobRequestScreen> {
       if (mounted) setState(() => _accepting = false);
     } catch (e) {
       debugPrint('Accept failed: $e');
-      say('Could not accept this parcel. Please try again.');
+      say(actionError(e, 'Could not accept this parcel. Please try again.'));
       if (mounted) setState(() => _accepting = false);
     }
   }

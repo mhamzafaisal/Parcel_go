@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
+import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/shipment_card.dart';
 import '../../../data/models/shipment.dart';
@@ -41,14 +42,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       appBar: AppBar(title: Text('My orders')),
       body: shipments.when(
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Text(
-              'Could not load your orders. Check your internet.',
-              textAlign: TextAlign.center,
-            ),
-          ),
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(myShipmentsProvider),
         ),
         data: _content,
       ),

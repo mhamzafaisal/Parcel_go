@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/utils/errors.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/star_row.dart';
 import '../../../data/models/rating.dart';
@@ -69,7 +71,9 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
     } catch (e) {
       debugPrint('Rating failed: $e');
       if (mounted) {
-        _snack('Could not submit your rating. Please try again.');
+        _snack(
+          actionError(e, 'Could not submit your rating. Please try again.'),
+        );
         setState(() => _submitting = false);
       }
     }
@@ -84,7 +88,11 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
       appBar: AppBar(title: Text('Rate your rider')),
       body: shipment.when(
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load this shipment.')),
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () =>
+              ref.invalidate(shipmentByIdProvider(widget.shipmentId)),
+        ),
         data: (s) {
           if (s == null) return Center(child: Text('Shipment not found.'));
           if (s.status != ShipmentStatus.delivered || s.riderId == null) {
@@ -94,7 +102,10 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
           }
           return existing.when(
             loading: () => Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Could not load your rating.')),
+            error: (e, _) => ErrorView(
+              error: e,
+              onRetry: () => ref.invalidate(ratingProvider(widget.shipmentId)),
+            ),
             data: (r) => r != null
                 ? const _Message('You already rated this delivery.')
                 : _form(s),

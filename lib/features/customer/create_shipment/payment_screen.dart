@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/utils/errors.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/parcel_options.dart';
@@ -85,7 +86,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     } catch (e) {
       debugPrint('Booking failed: $e');
       if (!mounted) return;
-      _snack('Could not save your booking. Please try again.');
+      _snack(actionError(e, 'Could not save your booking. Please try again.'));
     } finally {
       if (mounted && !_done) setState(() => _booking = false);
     }

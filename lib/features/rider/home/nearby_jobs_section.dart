@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/utils/errors.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../data/models/app_user.dart';
@@ -142,7 +143,17 @@ class _NearbyJobsSectionState extends ConsumerState<NearbyJobsSection> {
             child: Center(child: CircularProgressIndicator()),
           ),
           error: (e, _) => AppCard(
-            child: Text('Could not load parcels. Check your internet.'),
+            child: Row(
+              children: [
+                const Icon(Icons.cloud_off_outlined),
+                const SizedBox(width: 12),
+                Expanded(child: Text(friendlyError(e))),
+                TextButton(
+                  onPressed: () => ref.invalidate(openJobsProvider),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
           ),
           data: (list) {
             if (list.isEmpty) {

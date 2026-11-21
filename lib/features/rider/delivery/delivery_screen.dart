@@ -9,8 +9,10 @@ import 'package:latlong2/latlong.dart';
 import '../../../app/theme.dart';
 import '../../../core/widgets/themed_tile_layer.dart';
 import '../../../core/utils/format.dart';
+import '../../../core/utils/errors.dart';
 import '../../../core/utils/launcher.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../data/models/delivery_steps.dart';
@@ -146,7 +148,11 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
       if (mounted) _snack('Taking too long. Check your internet.');
     } catch (e) {
       debugPrint('Status update failed: $e');
-      if (mounted) _snack('Could not update the status. Please try again.');
+      if (mounted) {
+        _snack(
+          actionError(e, 'Could not update the status. Please try again.'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _advancing = false);
     }
@@ -163,7 +169,10 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen> {
       appBar: AppBar(title: Text('Delivery')),
       body: shipment.when(
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load your delivery.')),
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(activeShipmentProvider),
+        ),
         data: (s) {
           if (s == null) {
             return _NoDelivery(onBack: () => context.go('/rider-home'));

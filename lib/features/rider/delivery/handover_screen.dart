@@ -10,8 +10,10 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
+import '../../../core/utils/errors.dart';
 import '../../../core/utils/launcher.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/parcel_options.dart';
 import '../../../data/models/shipment.dart';
@@ -127,11 +129,13 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
           say('That code does not match. Please check it with the receiver.');
         }
       } else {
-        say('Could not complete the delivery. Please try again.');
+        say(
+          actionError(e, 'Could not complete the delivery. Please try again.'),
+        );
       }
     } catch (e) {
       debugPrint('Delivery failed: $e');
-      say('Could not complete the delivery. Please try again.');
+      say(actionError(e, 'Could not complete the delivery. Please try again.'));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -145,7 +149,10 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
       appBar: AppBar(title: Text('Hand over parcel')),
       body: shipment.when(
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load your delivery.')),
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(activeShipmentProvider),
+        ),
         data: (s) {
           if (s == null || s.status != ShipmentStatus.inTransit) {
             return Center(

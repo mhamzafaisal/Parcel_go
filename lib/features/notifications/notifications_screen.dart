@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/error_view.dart';
 import '../../data/models/app_notification.dart';
 import '../../data/repositories/notification_repository.dart';
 import 'notification_actions.dart';
@@ -57,14 +58,9 @@ class NotificationsScreen extends ConsumerWidget {
       ),
       body: notifications.when(
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Text(
-              'Could not load notifications. Check your internet.',
-              textAlign: TextAlign.center,
-            ),
-          ),
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(notificationsProvider),
         ),
         data: (list) {
           if (list.isEmpty) {

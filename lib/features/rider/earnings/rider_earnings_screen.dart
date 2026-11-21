@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/error_view.dart';
 import '../../../data/models/earning_entry.dart';
 import '../../../data/services/earnings_summary.dart';
 import '../../../data/services/pricing_service.dart';
@@ -29,14 +30,9 @@ class _RiderEarningsScreenState extends ConsumerState<RiderEarningsScreen> {
       appBar: AppBar(title: Text('Earnings')),
       body: earnings.when(
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Text(
-              'Could not load your earnings. Check your internet.',
-              textAlign: TextAlign.center,
-            ),
-          ),
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(riderEarningsProvider),
         ),
         data: _content,
       ),
